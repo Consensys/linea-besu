@@ -12,6 +12,7 @@ import java.util.OptionalInt;
 import java.util.Set;
 
 public class LineaProtocolSpecs {
+  public static final int DEFAULT_BLOCK_MAX_CALLDATA_SIZE = 1000000;
   private static final int LINEA_MAX_TX_CALLDATA_SIZE =
       10000; // fake value replace with the actual one when known
 
@@ -52,6 +53,7 @@ public class LineaProtocolSpecs {
                         TransactionType.EIP1559),
                     quorumCompatibilityMode,
                     txCalldataMaxSize))
+        .lineaParameters(lineaParameters)
         .name("Linea");
   }
 }

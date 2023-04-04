@@ -20,6 +20,7 @@ import org.hyperledger.besu.ethereum.GasLimitCalculator;
 import org.hyperledger.besu.ethereum.chain.BadBlockManager;
 import org.hyperledger.besu.ethereum.core.BlockHeaderFunctions;
 import org.hyperledger.besu.ethereum.core.BlockImporter;
+import org.hyperledger.besu.ethereum.linea.LineaParameters;
 import org.hyperledger.besu.ethereum.mainnet.feemarket.FeeMarket;
 import org.hyperledger.besu.ethereum.privacy.PrivateTransactionProcessor;
 import org.hyperledger.besu.evm.EVM;
@@ -81,6 +82,8 @@ public class ProtocolSpec {
   private final DepositsValidator depositsValidator;
 
   private final boolean isPoS;
+  private final LineaParameters lineaParameters;
+
   /**
    * Creates a new protocol specification instance.
    *
@@ -111,6 +114,7 @@ public class ProtocolSpec {
    * @param withdrawalsProcessor the Withdrawals processor to use
    * @param depositsValidator the withdrawals validator to use
    * @param isPoS indicates whether the current spec is PoS
+   * @param lineaParameters linea parameters
    */
   public ProtocolSpec(
       final String name,
@@ -139,7 +143,8 @@ public class ProtocolSpec {
       final WithdrawalsValidator withdrawalsValidator,
       final Optional<WithdrawalsProcessor> withdrawalsProcessor,
       final DepositsValidator depositsValidator,
-      final boolean isPoS) {
+      final boolean isPoS,
+      final LineaParameters lineaParameters) {
     this.name = name;
     this.evm = evm;
     this.transactionValidator = transactionValidator;
@@ -167,6 +172,7 @@ public class ProtocolSpec {
     this.withdrawalsProcessor = withdrawalsProcessor;
     this.depositsValidator = depositsValidator;
     this.isPoS = isPoS;
+    this.lineaParameters = lineaParameters;
   }
 
   /**
@@ -386,5 +392,9 @@ public class ProtocolSpec {
    */
   public boolean isPoS() {
     return isPoS;
+  }
+
+  public LineaParameters getLineaParameters() {
+    return lineaParameters;
   }
 }

@@ -24,6 +24,7 @@ import org.hyperledger.besu.ethereum.core.Transaction;
 import org.hyperledger.besu.ethereum.core.TransactionReceipt;
 import org.hyperledger.besu.ethereum.eth.transactions.PendingTransactions;
 import org.hyperledger.besu.ethereum.eth.transactions.PendingTransactions.TransactionSelectionResult;
+import org.hyperledger.besu.ethereum.linea.LineaParameters;
 import org.hyperledger.besu.ethereum.mainnet.AbstractBlockProcessor;
 import org.hyperledger.besu.ethereum.mainnet.MainnetTransactionProcessor;
 import org.hyperledger.besu.ethereum.mainnet.MainnetTransactionValidator;
@@ -45,7 +46,9 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.CancellationException;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -75,6 +78,12 @@ import org.slf4j.LoggerFactory;
  * not cleared between executions of buildTransactionListForBlock().
  */
 public class BlockTransactionSelector {
+
+  private final int blockMaxCalldataSize;
+  private final Function<Transaction, Optional<TransactionSelectionResult>>
+      lineaMaxCalldataSizeEnforcer;
+  private int blockCalldataSum;
+
   public static class TransactionValidationResult {
     private final Transaction transaction;
     private final ValidationResult<TransactionInvalidReason> validationResult;
@@ -240,7 +249,8 @@ public class BlockTransactionSelector {
       final Wei dataGasPrice,
       final FeeMarket feeMarket,
       final GasCalculator gasCalculator,
-      final GasLimitCalculator gasLimitCalculator) {
+      final GasLimitCalculator gasLimitCalculator,
+      final LineaParameters lineaParameters) {
     this.transactionProcessor = transactionProcessor;
     this.blockchain = blockchain;
     this.worldState = worldState;
@@ -255,6 +265,13 @@ public class BlockTransactionSelector {
     this.feeMarket = feeMarket;
     this.gasCalculator = gasCalculator;
     this.gasLimitCalculator = gasLimitCalculator;
+    if (lineaParameters.maybeBlockCalldataMaxSize().isPresent()) {
+      blockMaxCalldataSize = lineaParameters.maybeBlockCalldataMaxSize().getAsInt();
+      lineaMaxCalldataSizeEnforcer = (t) -> maxCalldataEnforcer(t);
+    } else {
+      blockMaxCalldataSize = 0;
+      lineaMaxCalldataSizeEnforcer = (t) -> Optional.empty();
+    }
   }
 
   /*
@@ -302,6 +319,12 @@ public class BlockTransactionSelector {
       final Transaction transaction, final boolean reportFutureNonceTransactionsAsInvalid) {
     if (isCancelled.get()) {
       throw new CancellationException("Cancelled during transaction selection.");
+    }
+
+    final Optional<TransactionSelectionResult> maybeResult =
+        lineaMaxCalldataSizeEnforcer.apply(transaction);
+    if (maybeResult.isPresent()) {
+      return maybeResult.get();
     }
 
     if (transactionTooLargeForBlock(transaction)) {
@@ -533,5 +556,14 @@ public class BlockTransactionSelector {
         gasAvailable,
         occupancyRatio);
     return occupancyRatio >= minBlockOccupancyRatio;
+  }
+
+  private Optional<TransactionSelectionResult> maxCalldataEnforcer(final Transaction transaction) {
+    this.blockCalldataSum += transaction.getPayload().size();
+    if (blockCalldataSum > blockMaxCalldataSize) {
+      return Optional.of(TransactionSelectionResult.COMPLETE_OPERATION);
+    } else {
+      return Optional.empty();
+    }
   }
 }
