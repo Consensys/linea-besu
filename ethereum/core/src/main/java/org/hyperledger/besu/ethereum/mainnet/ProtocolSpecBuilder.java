@@ -27,7 +27,6 @@ import org.hyperledger.besu.ethereum.core.BlockHeaderFunctions;
 import org.hyperledger.besu.ethereum.core.BlockImporter;
 import org.hyperledger.besu.ethereum.core.GoQuorumPrivacyParameters;
 import org.hyperledger.besu.ethereum.core.PrivacyParameters;
-import org.hyperledger.besu.ethereum.linea.LineaParameters;
 import org.hyperledger.besu.ethereum.mainnet.feemarket.FeeMarket;
 import org.hyperledger.besu.ethereum.mainnet.precompiles.privacy.FlexiblePrivacyPrecompiledContract;
 import org.hyperledger.besu.ethereum.mainnet.precompiles.privacy.PrivacyPluginPrecompiledContract;
@@ -83,7 +82,7 @@ public class ProtocolSpecBuilder {
   private BadBlockManager badBlockManager;
   private PoWHasher powHasher = PoWHasher.ETHASH_LIGHT;
   private boolean isPoS = false;
-  private LineaParameters lineaParameters = LineaParameters.DEFAULT;
+  private int blockMaxCalldataSize = -1;
 
   public ProtocolSpecBuilder gasCalculator(final Supplier<GasCalculator> gasCalculatorBuilder) {
     this.gasCalculatorBuilder = gasCalculatorBuilder;
@@ -273,8 +272,8 @@ public class ProtocolSpecBuilder {
     return this;
   }
 
-  public ProtocolSpecBuilder lineaParameters(final LineaParameters lineaParameters) {
-    this.lineaParameters = lineaParameters;
+  public ProtocolSpecBuilder blockMaxCalldataSize(final int blockCalldataMaxSize) {
+    this.blockMaxCalldataSize = blockCalldataMaxSize;
     return this;
   }
 
@@ -387,7 +386,7 @@ public class ProtocolSpecBuilder {
         Optional.ofNullable(withdrawalsProcessor),
         depositsValidator,
         isPoS,
-        lineaParameters);
+        blockMaxCalldataSize);
   }
 
   private PrivateTransactionProcessor createPrivateTransactionProcessor(

@@ -44,7 +44,6 @@ import org.hyperledger.besu.ethereum.difficulty.fixed.FixedDifficultyProtocolSch
 import org.hyperledger.besu.ethereum.eth.transactions.ImmutableTransactionPoolConfiguration;
 import org.hyperledger.besu.ethereum.eth.transactions.PendingTransactions;
 import org.hyperledger.besu.ethereum.eth.transactions.sorter.BaseFeePendingTransactionsSorter;
-import org.hyperledger.besu.ethereum.linea.LineaParameters;
 import org.hyperledger.besu.ethereum.mainnet.MainnetTransactionProcessor;
 import org.hyperledger.besu.ethereum.mainnet.MainnetTransactionValidator;
 import org.hyperledger.besu.ethereum.mainnet.ProtocolSchedule;
@@ -266,7 +265,7 @@ public abstract class AbstractBlockTransactionSelectorTest {
             FeeMarket.london(0L),
             new LondonGasCalculator(),
             GasLimitCalculator.constant(),
-            LineaParameters.DEFAULT);
+            -1);
 
     // this should fill up all the block space
     final Transaction fillingLegacyTx =
@@ -472,7 +471,7 @@ public abstract class AbstractBlockTransactionSelectorTest {
             getFeeMarket(),
             new LondonGasCalculator(),
             GasLimitCalculator.constant(),
-            LineaParameters.DEFAULT);
+            -1);
     return selector;
   }
 
