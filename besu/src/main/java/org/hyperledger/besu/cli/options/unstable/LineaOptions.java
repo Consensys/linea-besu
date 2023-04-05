@@ -31,7 +31,7 @@ public class LineaOptions implements CLIOptions<LineaParameters> {
       names = {BLOCK_MAX_CALLDATA_SIZE},
       paramLabel = "<INTEGER>",
       description =
-          "If specified, overrides the max size in bytes allowed in the transaction calldata field, specified by the current hard fork")
+          "If specified, overrides the max size in bytes of the sum of all transaction calldata fields contained in a block, specified by the current hard fork")
   private Integer blockMaxCalldataSize;
 
   public Optional<Integer> getTransactionMaxCalldataSize() {
