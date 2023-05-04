@@ -774,7 +774,7 @@ public class MainnetEVMs {
       final OperationRegistry registry,
       final GasCalculator gasCalculator,
       final BigInteger chainID) {
-    registerShanghaiOperations(registry, gasCalculator, chainID);
+    registerParisOperations(registry, gasCalculator, chainID);
     registry.put(new ZeroPrevRanDaoOperation(gasCalculator));
     registry.put(new ZeroBaseFeeOperation(gasCalculator));
     registry.put(new BlockHashNumberOperation(gasCalculator));
