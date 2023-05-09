@@ -746,7 +746,7 @@ public class MainnetEVMs {
         lineaOperations(gasCalculator, chainId),
         gasCalculator,
         evmConfiguration,
-        EvmSpecVersion.SHANGHAI);
+        EvmSpecVersion.LINEA);
   }
 
   /**
