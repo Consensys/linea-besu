@@ -54,7 +54,7 @@ public class LineaProtocolSpecs {
 
     final FeeMarket zeroBaseFeeMarket = FeeMarket.zeroBaseFee(0L);
 
-    return MainnetProtocolSpecs.parisDefinition(
+    return MainnetProtocolSpecs.londonDefinition(
             chainId,
             configContractSizeLimit,
             configStackSizeLimit,
