@@ -324,8 +324,10 @@ public class ProtocolScheduleBuilder {
         validateForkOrder("MuirGlacier", config.getMuirGlacierBlockNumber(), lastForkBlock);
     lastForkBlock = validateForkOrder("Berlin", config.getBerlinBlockNumber(), lastForkBlock);
     lastForkBlock = validateForkOrder("Linea", config.getLineaBlockNumber(), lastForkBlock);
-    lastForkBlock =
-        validateForkOrder("LineaOpcodes", config.getLineaOpcodesBlockNumber(), lastForkBlock);
+    if (config.getLineaOpcodesBlockNumber().isPresent()) {
+      lastForkBlock =
+          validateForkOrder("LineaOpcodes", config.getLineaOpcodesBlockNumber(), lastForkBlock);
+    }
     assert (lastForkBlock >= 0);
   }
 
