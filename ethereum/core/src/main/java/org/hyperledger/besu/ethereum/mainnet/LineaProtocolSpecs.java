@@ -77,10 +77,30 @@ public class LineaProtocolSpecs {
                         TransactionType.EIP1559),
                     txCalldataMaxSize))
         .blockBodyValidatorBuilder(LineaBlockBodyValidator::new)
+        .name("Linea");
+  }
+
+  static ProtocolSpecBuilder lineaOpCodesDefinition(
+      final Optional<BigInteger> chainId,
+      final OptionalInt configContractSizeLimit,
+      final OptionalInt configStackSizeLimit,
+      final boolean enableRevertReason,
+      final GenesisConfigOptions genesisConfigOptions,
+      final EvmConfiguration evmConfiguration,
+      final LineaParameters lineaParameters) {
+
+    return LineaProtocolSpecs.lineaDefinition(
+            chainId,
+            configContractSizeLimit,
+            configStackSizeLimit,
+            enableRevertReason,
+            genesisConfigOptions,
+            evmConfiguration,
+            lineaParameters)
         // some Linea evm opcodes behave differently.
         .evmBuilder(
             (gasCalculator, jdCacheConfig) ->
-                MainnetEVMs.linea(gasCalculator, chainId.orElse(BigInteger.ZERO), evmConfiguration))
-        .name("Linea");
+                MainnetEVMs.linea(
+                    gasCalculator, chainId.orElse(BigInteger.ZERO), evmConfiguration));
   }
 }
