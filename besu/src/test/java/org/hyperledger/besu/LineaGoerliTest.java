@@ -41,7 +41,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-public class LineaTest {
+public class LineaGoerliTest {
 
   private final Vertx vertx = Vertx.vertx();
 
@@ -54,12 +54,13 @@ public class LineaTest {
 
   @Test
   public void smokeTest() {
-    setUpControllerWithLineaEnabled();
+    setUpControllerWithLineaGoerliEnabled();
   }
 
-  private BesuController setUpControllerWithLineaEnabled() {
+  private BesuController setUpControllerWithLineaGoerliEnabled() {
     return new BesuController.Builder()
-        .fromGenesisConfig(GenesisConfigFile.genesisFileFromResources("/linea.json"), SyncMode.FULL)
+        .fromGenesisConfig(
+            GenesisConfigFile.genesisFileFromResources("/linea_goerli.json"), SyncMode.FULL)
         .synchronizerConfiguration(SynchronizerConfiguration.builder().build())
         .ethProtocolConfiguration(EthProtocolConfiguration.defaultConfig())
         .storageProvider(new InMemoryKeyValueStorageProvider())

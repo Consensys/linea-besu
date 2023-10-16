@@ -17,6 +17,7 @@ package org.hyperledger.besu.plugin.services;
 import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.evm.worldstate.WorldUpdater;
 import org.hyperledger.besu.plugin.Unstable;
+import org.hyperledger.besu.plugin.data.BlockTraceResult;
 import org.hyperledger.besu.plugin.services.tracer.BlockAwareOperationTracer;
 
 import java.util.function.Consumer;
@@ -30,7 +31,7 @@ public interface TraceService extends BesuService {
    * @param blockNumber the block number
    * @param tracer the tracer (OperationTracer)
    */
-  void traceBlock(long blockNumber, BlockAwareOperationTracer tracer);
+  BlockTraceResult traceBlock(long blockNumber, BlockAwareOperationTracer tracer);
 
   /**
    * Traces a block by hash
@@ -38,7 +39,7 @@ public interface TraceService extends BesuService {
    * @param hash the block hash
    * @param tracer the tracer (OperationTracer)
    */
-  void traceBlock(Hash hash, BlockAwareOperationTracer tracer);
+  BlockTraceResult traceBlock(Hash hash, BlockAwareOperationTracer tracer);
 
   /**
    * Traces range of blocks
