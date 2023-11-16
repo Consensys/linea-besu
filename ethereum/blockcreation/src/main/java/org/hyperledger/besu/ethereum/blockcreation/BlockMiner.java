@@ -55,9 +55,9 @@ public class BlockMiner<M extends AbstractBlockCreator> implements Runnable {
 
   protected final ProtocolContext protocolContext;
   protected final BlockHeader parentHeader;
-
-  private final ProtocolSchedule protocolSchedule;
-  private final Subscribers<MinedBlockObserver> observers;
+//
+//  private final ProtocolSchedule protocolSchedule;
+//  private final Subscribers<MinedBlockObserver> observers;
   private final AbstractBlockScheduler scheduler;
 
   public BlockMiner(
@@ -70,8 +70,8 @@ public class BlockMiner<M extends AbstractBlockCreator> implements Runnable {
     this.blockCreatorFactory = blockCreatorFactory;
     this.minerBlockCreator = blockCreatorFactory.apply(parentHeader);
     this.protocolContext = protocolContext;
-    this.protocolSchedule = protocolSchedule;
-    this.observers = observers;
+//    this.protocolSchedule = protocolSchedule;
+//    this.observers = observers;
     this.scheduler = scheduler;
     this.parentHeader = parentHeader;
   }
@@ -140,45 +140,28 @@ public class BlockMiner<M extends AbstractBlockCreator> implements Runnable {
     final Stopwatch stopwatch = Stopwatch.createStarted();
     LOG.trace("Mining a new block with timestamp {}", newBlockTimestamp);
     final Block block = minerBlockCreator.createBlock(newBlockTimestamp).getBlock();
-    LOG.trace(
-        "Block created, importing to local chain, block includes {} transactions",
-        block.getBody().getTransactions().size());
+    final double taskTimeInSec = stopwatch.elapsed(TimeUnit.MILLISECONDS) / 1000.0;
+    LOG.info(
+            String.format(
+                    "Produced #%,d / %d tx / %d om / %,d (%01.1f%%) gas / (%s) in %01.3fs",
+                    block.getHeader().getNumber(),
+                    block.getBody().getTransactions().size(),
+                    block.getBody().getOmmers().size(),
+                    block.getHeader().getGasUsed(),
+                    (block.getHeader().getGasUsed() * 100.0) / block.getHeader().getGasLimit(),
+                    block.getHash(),
+                    taskTimeInSec));
 
-    if (!shouldImportBlock(block)) {
-      return false;
-    }
-
-    final BlockImporter importer =
-        protocolSchedule.getByBlockHeader(block.getHeader()).getBlockImporter();
-    final BlockImportResult blockImportResult =
-        importer.importBlock(protocolContext, block, HeaderValidationMode.FULL);
-    if (blockImportResult.isImported()) {
-      notifyNewBlockListeners(block);
-      final double taskTimeInSec = stopwatch.elapsed(TimeUnit.MILLISECONDS) / 1000.0;
-      LOG.info(
-          String.format(
-              "Produced #%,d / %d tx / %d om / %,d (%01.1f%%) gas / (%s) in %01.3fs",
-              block.getHeader().getNumber(),
-              block.getBody().getTransactions().size(),
-              block.getBody().getOmmers().size(),
-              block.getHeader().getGasUsed(),
-              (block.getHeader().getGasUsed() * 100.0) / block.getHeader().getGasLimit(),
-              block.getHash(),
-              taskTimeInSec));
-    } else {
-      LOG.error("Illegal block mined, could not be imported to local chain.");
-    }
-
-    return blockImportResult.isImported();
+    return true;
   }
 
   public void cancel() {
-    minerBlockCreator.cancel();
+//    minerBlockCreator.cancel();
   }
 
-  private void notifyNewBlockListeners(final Block block) {
-    observers.forEach(obs -> obs.blockMined(block));
-  }
+//  private void notifyNewBlockListeners(final Block block) {
+//    observers.forEach(obs -> obs.blockMined(block));
+//  }
 
   public BlockHeader getParentHeader() {
     return parentHeader;
