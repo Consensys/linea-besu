@@ -39,22 +39,23 @@ public interface PluginTransactionSelector {
    * Method called to decide whether a transaction is added to a block. The result can also indicate
    * that no further transactions can be added to the block.
    *
-   * @param pendingTransaction candidate transaction
+   * @param evaluationContext The current selection context
    * @return TransactionSelectionResult that indicates whether to include the transaction
    */
   TransactionSelectionResult evaluateTransactionPreProcessing(
-      PendingTransaction pendingTransaction);
+      TransactionEvaluationContext<? extends PendingTransaction> evaluationContext);
 
   /**
    * Method called to decide whether a processed transaction is added to a block. The result can
    * also indicate that no further transactions can be added to the block.
    *
-   * @param pendingTransaction candidate transaction
+   * @param evaluationContext The current selection context
    * @param processingResult the transaction processing result
    * @return TransactionSelectionResult that indicates whether to include the transaction
    */
   TransactionSelectionResult evaluateTransactionPostProcessing(
-      PendingTransaction pendingTransaction, TransactionProcessingResult processingResult);
+      TransactionEvaluationContext<? extends PendingTransaction> evaluationContext,
+      TransactionProcessingResult processingResult);
 
   /**
    * Method called when a transaction is selected to be added to a block.

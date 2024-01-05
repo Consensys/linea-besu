@@ -83,6 +83,7 @@ import org.hyperledger.besu.plugin.data.TransactionSelectionResult;
 import org.hyperledger.besu.plugin.services.MetricsSystem;
 import org.hyperledger.besu.plugin.services.txselection.PluginTransactionSelector;
 import org.hyperledger.besu.plugin.services.txselection.PluginTransactionSelectorFactory;
+import org.hyperledger.besu.plugin.services.txselection.TransactionEvaluationContext;
 import org.hyperledger.besu.services.kvstore.InMemoryKeyValueStorage;
 import org.hyperledger.besu.util.number.Percentage;
 
@@ -585,17 +586,25 @@ public abstract class AbstractBlockTransactionSelectorTest {
             new PluginTransactionSelector() {
               @Override
               public TransactionSelectionResult evaluateTransactionPreProcessing(
-                  final PendingTransaction pendingTransaction) {
-                if (pendingTransaction.getTransaction().equals(notSelectedTransient))
+                  final TransactionEvaluationContext<? extends PendingTransaction>
+                      evaluationContext) {
+                if (evaluationContext
+                    .getPendingTransaction()
+                    .getTransaction()
+                    .equals(notSelectedTransient))
                   return PluginTransactionSelectionResult.GENERIC_PLUGIN_INVALID_TRANSIENT;
-                if (pendingTransaction.getTransaction().equals(notSelectedInvalid))
+                if (evaluationContext
+                    .getPendingTransaction()
+                    .getTransaction()
+                    .equals(notSelectedInvalid))
                   return PluginTransactionSelectionResult.GENERIC_PLUGIN_INVALID;
                 return SELECTED;
               }
 
               @Override
               public TransactionSelectionResult evaluateTransactionPostProcessing(
-                  final PendingTransaction pendingTransaction,
+                  final TransactionEvaluationContext<? extends PendingTransaction>
+                      evaluationContext,
                   final org.hyperledger.besu.plugin.data.TransactionProcessingResult
                       processingResult) {
                 return SELECTED;
@@ -649,13 +658,15 @@ public abstract class AbstractBlockTransactionSelectorTest {
             new PluginTransactionSelector() {
               @Override
               public TransactionSelectionResult evaluateTransactionPreProcessing(
-                  final PendingTransaction pendingTransaction) {
+                  final TransactionEvaluationContext<? extends PendingTransaction>
+                      evaluationContext) {
                 return SELECTED;
               }
 
               @Override
               public TransactionSelectionResult evaluateTransactionPostProcessing(
-                  final PendingTransaction pendingTransaction,
+                  final TransactionEvaluationContext<? extends PendingTransaction>
+                      evaluationContext,
                   final org.hyperledger.besu.plugin.data.TransactionProcessingResult
                       processingResult) {
                 // the transaction with max gas +1 should fail
@@ -935,9 +946,10 @@ public abstract class AbstractBlockTransactionSelectorTest {
     final BiFunction<Transaction, Long, Answer<TransactionSelectionResult>> tooLate =
         (p, t) ->
             invocation -> {
-              final org.hyperledger.besu.ethereum.eth.transactions.PendingTransaction ptx =
-                  invocation.getArgument(0);
-              if (ptx.getTransaction().equals(p)) {
+              final org.hyperledger.besu.ethereum.blockcreation.txselection
+                      .TransactionEvaluationContext
+                  ctx = invocation.getArgument(0);
+              if (ctx.getTransaction().equals(p)) {
                 Thread.sleep(t);
               } else {
                 Thread.sleep(fastProcessingTxTime);
