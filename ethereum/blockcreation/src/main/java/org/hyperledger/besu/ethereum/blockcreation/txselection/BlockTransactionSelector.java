@@ -412,8 +412,7 @@ public class BlockTransactionSelector {
           evaluationContext, timeoutSelectionResult, txWorldStateUpdater);
     }
 
-    pluginTransactionSelector.onTransactionSelected(
-        evaluationContext.getPendingTransaction(), processingResult);
+    pluginTransactionSelector.onTransactionSelected(evaluationContext, processingResult);
     blockWorldStateUpdater = worldState.updater();
     LOG.atTrace()
         .setMessage("Selected {} for block creation, evaluated in {}")
@@ -440,7 +439,7 @@ public class BlockTransactionSelector {
 
     transactionSelectionResults.updateNotSelected(
         evaluationContext.getTransaction(), selectionResult);
-    pluginTransactionSelector.onTransactionNotSelected(pendingTransaction, selectionResult);
+    pluginTransactionSelector.onTransactionNotSelected(evaluationContext, selectionResult);
     LOG.atTrace()
         .setMessage("Not selected {} for block creation with result {}, evaluated in {}")
         .addArgument(pendingTransaction::toTraceLog)

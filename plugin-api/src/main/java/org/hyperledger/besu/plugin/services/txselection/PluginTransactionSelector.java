@@ -60,19 +60,19 @@ public interface PluginTransactionSelector {
   /**
    * Method called when a transaction is selected to be added to a block.
    *
-   * @param pendingTransaction The transaction that has been selected.
+   * @param evaluationContext The current selection context
    * @param processingResult The result of processing the selected transaction.
    */
   default void onTransactionSelected(
-      final PendingTransaction pendingTransaction,
+      final TransactionEvaluationContext<? extends PendingTransaction> evaluationContext,
       final TransactionProcessingResult processingResult) {}
   /**
    * Method called when a transaction is not selected to be added to a block.
    *
-   * @param pendingTransaction The transaction that has not been selected.
+   * @param evaluationContext The current selection context
    * @param transactionSelectionResult The transaction selection result
    */
   default void onTransactionNotSelected(
-      final PendingTransaction pendingTransaction,
+      final TransactionEvaluationContext<? extends PendingTransaction> evaluationContext,
       final TransactionSelectionResult transactionSelectionResult) {}
 }

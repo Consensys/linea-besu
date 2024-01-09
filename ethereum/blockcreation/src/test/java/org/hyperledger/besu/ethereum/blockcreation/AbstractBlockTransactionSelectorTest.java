@@ -726,13 +726,14 @@ public abstract class AbstractBlockTransactionSelectorTest {
 
     selector.buildTransactionListForBlock();
 
-    ArgumentCaptor<PendingTransaction> argumentCaptor =
-        ArgumentCaptor.forClass(PendingTransaction.class);
+    @SuppressWarnings("unchecked")
+    ArgumentCaptor<TransactionEvaluationContext<PendingTransaction>> argumentCaptor =
+        ArgumentCaptor.forClass(TransactionEvaluationContext.class);
 
     // selected transaction must be notified to the selector
     verify(transactionSelector)
         .onTransactionSelected(argumentCaptor.capture(), any(TransactionProcessingResult.class));
-    PendingTransaction selected = argumentCaptor.getValue();
+    PendingTransaction selected = argumentCaptor.getValue().getPendingTransaction();
     assertThat(selected.getTransaction()).isEqualTo(transaction);
 
     // unselected transaction must be notified to the selector with correct reason
@@ -740,7 +741,7 @@ public abstract class AbstractBlockTransactionSelectorTest {
         .onTransactionNotSelected(
             argumentCaptor.capture(),
             eq(TransactionSelectionResult.invalid(invalidReason.toString())));
-    PendingTransaction rejectedTransaction = argumentCaptor.getValue();
+    PendingTransaction rejectedTransaction = argumentCaptor.getValue().getPendingTransaction();
     assertThat(rejectedTransaction.getTransaction()).isEqualTo(invalidTransaction);
   }
 
