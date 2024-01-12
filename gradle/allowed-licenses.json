@@ -5,6 +5,10 @@
       "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
     },
     {
+      "moduleLicense": "Apache License 2.0",
+      "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+    },
+    {
       "moduleLicense": "BSD Zero Clause License",
       "moduleLicenseUrl": "https://opensource.org/licenses/0BSD"
     },
