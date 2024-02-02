@@ -12,34 +12,43 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-package org.hyperledger.besu.ethereum.transaction;
+package org.hyperledger.besu.plugin.data;
 
-import org.hyperledger.besu.ethereum.core.Transaction;
-import org.hyperledger.besu.ethereum.mainnet.ValidationResult;
-import org.hyperledger.besu.ethereum.processing.TransactionProcessingResult;
+import org.hyperledger.besu.datatypes.Transaction;
 
-import org.apache.tuweni.bytes.Bytes;
-
-public record TransactionSimulatorResult(
+/**
+ * TransactionSimulationResult
+ *
+ * @param transaction tx
+ * @param result res
+ */
+public record TransactionSimulationResult(
     Transaction transaction, TransactionProcessingResult result) {
 
+  /**
+   * Was the simulation successful?
+   *
+   * @return boolean
+   */
   public boolean isSuccessful() {
     return result.isSuccessful();
   }
 
+  /**
+   * Was the transaction invalid?
+   *
+   * @return invalid
+   */
   public boolean isInvalid() {
     return result.isInvalid();
   }
 
+  /**
+   * Estimated gas used by the transaction
+   *
+   * @return estimated gas used
+   */
   public long getGasEstimate() {
     return transaction.getGasLimit() - result.getGasRemaining();
-  }
-
-  public Bytes getOutput() {
-    return result.getOutput();
-  }
-
-  public ValidationResult<TransactionInvalidReason> getValidationResult() {
-    return result.getValidationResult();
   }
 }
