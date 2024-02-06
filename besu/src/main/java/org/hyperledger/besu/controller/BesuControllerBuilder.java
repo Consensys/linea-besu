@@ -97,9 +97,9 @@ import org.hyperledger.besu.ethereum.worldstate.WorldStateStorage;
 import org.hyperledger.besu.evm.internal.EvmConfiguration;
 import org.hyperledger.besu.metrics.ObservableMetricsSystem;
 import org.hyperledger.besu.plugin.services.MetricsSystem;
+import org.hyperledger.besu.plugin.services.PluginTransactionValidatorService;
 import org.hyperledger.besu.plugin.services.TransactionSelectionService;
 import org.hyperledger.besu.plugin.services.permissioning.NodeMessagePermissioningProvider;
-import org.hyperledger.besu.plugin.services.txvalidator.PluginTransactionValidatorFactory;
 
 import java.io.Closeable;
 import java.math.BigInteger;
@@ -188,7 +188,7 @@ public abstract class BesuControllerBuilder implements MiningParameterOverrides 
   /** the Dagger configured context that can provide dependencies */
   protected Optional<BesuComponent> besuComponent = Optional.empty();
 
-  private PluginTransactionValidatorFactory pluginTransactionValidatorFactory;
+  private PluginTransactionValidatorService pluginTransactionValidatorService;
 
   private int numberOfBlocksToCache = 0;
 
@@ -544,14 +544,14 @@ public abstract class BesuControllerBuilder implements MiningParameterOverrides 
   }
 
   /**
-   * sets the pluginTransactionValidatorFactory
+   * sets the pluginTransactionValidatorService
    *
-   * @param pluginTransactionValidatorFactory factory that creates plugin transaction Validators
+   * @param pluginTransactionValidatorService factory that creates plugin transaction Validators
    * @return the besu controller builder
    */
-  public BesuControllerBuilder pluginTransactionValidatorFactory(
-      final PluginTransactionValidatorFactory pluginTransactionValidatorFactory) {
-    this.pluginTransactionValidatorFactory = pluginTransactionValidatorFactory;
+  public BesuControllerBuilder pluginTransactionValidatorService(
+      final PluginTransactionValidatorService pluginTransactionValidatorService) {
+    this.pluginTransactionValidatorService = pluginTransactionValidatorService;
     return this;
   }
 
@@ -713,7 +713,7 @@ public abstract class BesuControllerBuilder implements MiningParameterOverrides 
             metricsSystem,
             syncState,
             transactionPoolConfiguration,
-            pluginTransactionValidatorFactory,
+            pluginTransactionValidatorService,
             besuComponent.map(BesuComponent::getBlobCache).orElse(new BlobCache()));
 
     final List<PeerValidator> peerValidators = createPeerValidators(protocolSchedule);

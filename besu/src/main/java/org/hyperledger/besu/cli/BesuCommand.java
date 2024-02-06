@@ -174,7 +174,6 @@ import org.hyperledger.besu.plugin.services.metrics.MetricCategoryRegistry;
 import org.hyperledger.besu.plugin.services.securitymodule.SecurityModule;
 import org.hyperledger.besu.plugin.services.storage.PrivacyKeyValueStorageFactory;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.RocksDBPlugin;
-import org.hyperledger.besu.plugin.services.txvalidator.PluginTransactionValidatorFactory;
 import org.hyperledger.besu.services.BesuConfigurationImpl;
 import org.hyperledger.besu.services.BesuEventsImpl;
 import org.hyperledger.besu.services.BesuPluginContextImpl;
@@ -1787,7 +1786,7 @@ public class BesuCommand implements DefaultCommandValues, Runnable {
         .ethProtocolConfiguration(unstableEthProtocolOptions.toDomainObject())
         .networkConfiguration(unstableNetworkingOptions.toDomainObject())
         .transactionSelectorService(getTransactionSelectorService())
-        .pluginTransactionValidatorFactory(getPluginTransactionValidatorFactory())
+        .pluginTransactionValidatorService(getPluginTransactionValidatorService())
         .dataDirectory(dataDir())
         .dataStorageConfiguration(getDataStorageConfiguration())
         .miningParameters(getMiningParameters())
@@ -1819,15 +1818,11 @@ public class BesuCommand implements DefaultCommandValues, Runnable {
   }
 
   private TransactionSelectionService getTransactionSelectorService() {
-    final TransactionSelectionService txSelectionService =
-        besuPluginContext.getService(TransactionSelectionService.class).orElseThrow();
-    return txSelectionService;
+    return besuPluginContext.getService(TransactionSelectionService.class).orElseThrow();
   }
 
-  private PluginTransactionValidatorFactory getPluginTransactionValidatorFactory() {
-    final Optional<PluginTransactionValidatorService> txSValidatorService =
-        besuPluginContext.getService(PluginTransactionValidatorService.class);
-    return txSValidatorService.map(PluginTransactionValidatorService::get).orElse(null);
+  private PluginTransactionValidatorService getPluginTransactionValidatorService() {
+    return besuPluginContext.getService(PluginTransactionValidatorService.class).orElseThrow();
   }
 
   private JsonRpcConfiguration createEngineJsonRpcConfiguration(

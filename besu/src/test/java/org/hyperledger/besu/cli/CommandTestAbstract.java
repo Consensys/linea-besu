@@ -293,7 +293,7 @@ public abstract class CommandTestAbstract {
     when(mockControllerBuilder.maxRemotelyInitiatedPeers(anyInt()))
         .thenReturn(mockControllerBuilder);
     when(mockControllerBuilder.transactionSelectorService(any())).thenReturn(mockControllerBuilder);
-    when(mockControllerBuilder.pluginTransactionValidatorFactory(any()))
+    when(mockControllerBuilder.pluginTransactionValidatorService(any()))
         .thenReturn(mockControllerBuilder);
     when(mockControllerBuilder.besuComponent(any(BesuComponent.class)))
         .thenReturn(mockControllerBuilder);
