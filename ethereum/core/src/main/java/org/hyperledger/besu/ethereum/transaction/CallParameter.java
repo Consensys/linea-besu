@@ -163,10 +163,10 @@ public class CallParameter {
         + gasPrice
         + ", value="
         + value
-        + ", payload="
-        + payload
-        + ", accessList="
-        + accessList
+        + ", payloadSize="
+        + (payload == null ? "null" : payload.size())
+        + ", accessListSize="
+        + accessList.map(List::size)
         + '}';
   }
 
