@@ -53,7 +53,6 @@ import org.hyperledger.besu.plugin.services.StorageService;
 import org.hyperledger.besu.plugin.services.TransactionSelectionService;
 import org.hyperledger.besu.plugin.services.TransactionSimulationService;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.RocksDBPlugin;
-import org.hyperledger.besu.plugin.services.txselection.PluginTransactionSelectorFactory;
 import org.hyperledger.besu.plugin.services.txvalidator.PluginTransactionValidatorFactory;
 import org.hyperledger.besu.services.BesuConfigurationImpl;
 import org.hyperledger.besu.services.BesuEventsImpl;
@@ -212,8 +211,8 @@ public class ThreadBesuNodeRunner implements BesuNodeRunner {
 
     final int maxPeers = 25;
 
-    final Optional<PluginTransactionSelectorFactory> transactionSelectorFactory =
-        getTransactionSelectorFactory(besuPluginContext);
+    final TransactionSelectionService transactionSelectorService =
+        getTransactionSelectorService(besuPluginContext);
 
     final PluginTransactionValidatorFactory pluginTransactionValidatorFactory =
         getPluginTransactionValidatorFactory(besuPluginContext);
@@ -238,7 +237,7 @@ public class ThreadBesuNodeRunner implements BesuNodeRunner {
         .maxRemotelyInitiatedPeers(15)
         .networkConfiguration(node.getNetworkingConfiguration())
         .randomPeerPriority(false)
-        .transactionSelectorFactory(transactionSelectorFactory)
+        .transactionSelectorService(transactionSelectorService)
         .pluginTransactionValidatorFactory(pluginTransactionValidatorFactory);
 
     node.getGenesisConfig()
@@ -373,11 +372,11 @@ public class ThreadBesuNodeRunner implements BesuNodeRunner {
     throw new RuntimeException("Console contents can only be captured in process execution");
   }
 
-  private Optional<PluginTransactionSelectorFactory> getTransactionSelectorFactory(
+  private TransactionSelectionService getTransactionSelectorService(
       final BesuPluginContextImpl besuPluginContext) {
-    final Optional<TransactionSelectionService> txSelectionService =
-        besuPluginContext.getService(TransactionSelectionService.class);
-    return txSelectionService.isPresent() ? txSelectionService.get().get() : Optional.empty();
+    final TransactionSelectionService txSelectionService =
+        besuPluginContext.getService(TransactionSelectionService.class).orElseThrow();
+    return txSelectionService;
   }
 
   private PluginTransactionValidatorFactory getPluginTransactionValidatorFactory(

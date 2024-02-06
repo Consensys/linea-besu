@@ -174,7 +174,6 @@ import org.hyperledger.besu.plugin.services.metrics.MetricCategoryRegistry;
 import org.hyperledger.besu.plugin.services.securitymodule.SecurityModule;
 import org.hyperledger.besu.plugin.services.storage.PrivacyKeyValueStorageFactory;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.RocksDBPlugin;
-import org.hyperledger.besu.plugin.services.txselection.PluginTransactionSelectorFactory;
 import org.hyperledger.besu.plugin.services.txvalidator.PluginTransactionValidatorFactory;
 import org.hyperledger.besu.services.BesuConfigurationImpl;
 import org.hyperledger.besu.services.BesuEventsImpl;
@@ -237,7 +236,6 @@ import io.vertx.core.json.DecodeException;
 import io.vertx.core.metrics.MetricsOptions;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.units.bigints.UInt256;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import picocli.AutoComplete;
 import picocli.CommandLine;
@@ -1788,7 +1786,7 @@ public class BesuCommand implements DefaultCommandValues, Runnable {
         .synchronizerConfiguration(buildSyncConfig())
         .ethProtocolConfiguration(unstableEthProtocolOptions.toDomainObject())
         .networkConfiguration(unstableNetworkingOptions.toDomainObject())
-        .transactionSelectorFactory(getTransactionSelectorFactory())
+        .transactionSelectorService(getTransactionSelectorService())
         .pluginTransactionValidatorFactory(getPluginTransactionValidatorFactory())
         .dataDirectory(dataDir())
         .dataStorageConfiguration(getDataStorageConfiguration())
@@ -1821,11 +1819,10 @@ public class BesuCommand implements DefaultCommandValues, Runnable {
         .cacheLastBlocks(numberOfblocksToCache);
   }
 
-  @NotNull
-  private Optional<PluginTransactionSelectorFactory> getTransactionSelectorFactory() {
-    final Optional<TransactionSelectionService> txSelectionService =
-        besuPluginContext.getService(TransactionSelectionService.class);
-    return txSelectionService.isPresent() ? txSelectionService.get().get() : Optional.empty();
+  private TransactionSelectionService getTransactionSelectorService() {
+    final TransactionSelectionService txSelectionService =
+        besuPluginContext.getService(TransactionSelectionService.class).orElseThrow();
+    return txSelectionService;
   }
 
   private PluginTransactionValidatorFactory getPluginTransactionValidatorFactory() {
