@@ -23,6 +23,7 @@ import static org.mockito.Mockito.mock;
 import org.hyperledger.besu.consensus.common.bft.BftExtraData;
 import org.hyperledger.besu.ethereum.ProtocolContext;
 import org.hyperledger.besu.ethereum.core.BlockHeader;
+import org.hyperledger.besu.plugin.services.TransactionSelectionService;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.junit.jupiter.api.Test;
@@ -44,7 +45,11 @@ public class BftVanityDataValidationRuleTest {
         new BftExtraData(Bytes.wrap(new byte[extraDataSize]), emptyList(), empty(), 0, emptyList());
 
     final ProtocolContext context =
-        new ProtocolContext(null, null, setupContextWithBftExtraData(emptyList(), extraData), null);
+        new ProtocolContext(
+            null,
+            null,
+            setupContextWithBftExtraData(emptyList(), extraData),
+            mock(TransactionSelectionService.class));
     return validationRule.validate(blockHeader, null, context);
   }
 }

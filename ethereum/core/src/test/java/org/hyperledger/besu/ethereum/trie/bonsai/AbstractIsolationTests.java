@@ -169,39 +169,42 @@ public abstract class AbstractIsolationTests {
             EvmConfiguration.DEFAULT);
     var ws = archive.getMutable();
     genesisState.writeStateTo(ws);
-    protocolContext = new ProtocolContext(blockchain, archive, null, new TransactionSelectionService() {
-      @Override
-      public Optional<PluginTransactionSelectorFactory> get() {
-        return Optional.empty();
-      }
+    protocolContext =
+        new ProtocolContext(
+            blockchain,
+            archive,
+            null,
+            new TransactionSelectionService() {
+              @Override
+              public Optional<PluginTransactionSelectorFactory> get() {
+                return Optional.empty();
+              }
 
-      @Override
-      public void registerTransactionSelectorFactory(final PluginTransactionSelectorFactory transactionSelectorFactory) {
-
-      }
-    });
+              @Override
+              public void registerTransactionSelectorFactory(
+                  final PluginTransactionSelectorFactory transactionSelectorFactory) {}
+            });
     ethContext = mock(EthContext.class, RETURNS_DEEP_STUBS);
     when(ethContext.getEthPeers().subscribeConnect(any())).thenReturn(1L);
     transactionPool =
         new TransactionPool(
-                () -> sorter,
-                protocolSchedule,
-                protocolContext,
-                mock(TransactionBroadcaster.class),
-                ethContext,
-                txPoolMetrics,
-                poolConfiguration,
-                new PluginTransactionValidatorService() {
-                  @Override
-                  public PluginTransactionValidatorFactory get() {
-                    return null;
-                  }
+            () -> sorter,
+            protocolSchedule,
+            protocolContext,
+            mock(TransactionBroadcaster.class),
+            ethContext,
+            txPoolMetrics,
+            poolConfiguration,
+            new PluginTransactionValidatorService() {
+              @Override
+              public PluginTransactionValidatorFactory get() {
+                return null;
+              }
 
-                  @Override
-                  public void registerTransactionValidatorFactory(final PluginTransactionValidatorFactory transactionValidatorFactory) {
-
-                  }
-                });
+              @Override
+              public void registerTransactionValidatorFactory(
+                  final PluginTransactionValidatorFactory transactionValidatorFactory) {}
+            });
     transactionPool.setEnabled();
   }
 

@@ -256,7 +256,7 @@ public abstract class AbstractTransactionPoolTest {
 
   protected TransactionPool createTransactionPool(
       final Consumer<ImmutableTransactionPoolConfiguration.Builder> configConsumer) {
-    return createTransactionPool(configConsumer, null);
+    return createTransactionPool(configConsumer, mock(PluginTransactionValidatorService.class));
   }
 
   private TransactionPool createTransactionPool(
