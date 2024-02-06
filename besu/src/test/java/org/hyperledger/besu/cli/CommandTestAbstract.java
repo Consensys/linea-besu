@@ -76,7 +76,9 @@ import org.hyperledger.besu.ethereum.worldstate.WorldStateArchive;
 import org.hyperledger.besu.metrics.prometheus.MetricsConfiguration;
 import org.hyperledger.besu.pki.config.PkiKeyStoreConfiguration;
 import org.hyperledger.besu.plugin.services.PicoCLIOptions;
+import org.hyperledger.besu.plugin.services.PluginTransactionValidatorService;
 import org.hyperledger.besu.plugin.services.StorageService;
+import org.hyperledger.besu.plugin.services.TransactionSelectionService;
 import org.hyperledger.besu.plugin.services.securitymodule.SecurityModule;
 import org.hyperledger.besu.plugin.services.storage.KeyValueStorageFactory;
 import org.hyperledger.besu.plugin.services.storage.PrivacyKeyValueStorageFactory;
@@ -207,6 +209,8 @@ public abstract class CommandTestAbstract {
   @Mock protected JsonBlockImporter jsonBlockImporter;
   @Mock protected RlpBlockImporter rlpBlockImporter;
   @Mock protected StorageServiceImpl storageService;
+  @Mock protected TransactionSelectionServiceImpl txSelectionService;
+  @Mock protected PluginTransactionValidatorServiceImpl txValidatorService;
   @Mock protected SecurityModuleServiceImpl securityModuleService;
   @Mock protected SecurityModule securityModule;
   @Mock protected BesuConfigurationImpl commonPluginConfiguration;
@@ -379,6 +383,12 @@ public abstract class CommandTestAbstract {
     lenient()
         .when(mockBesuPluginContext.getService(StorageService.class))
         .thenReturn(Optional.of(storageService));
+    lenient()
+        .when(mockBesuPluginContext.getService(TransactionSelectionService.class))
+        .thenReturn(Optional.of(txSelectionService));
+    lenient()
+        .when(mockBesuPluginContext.getService(PluginTransactionValidatorService.class))
+        .thenReturn(Optional.of(txValidatorService));
 
     lenient()
         .doReturn(mockPkiBlockCreationConfiguration)
