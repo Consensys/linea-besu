@@ -33,6 +33,7 @@ import org.hyperledger.besu.ethereum.core.AddressHelpers;
 import org.hyperledger.besu.ethereum.core.BlockHeader;
 import org.hyperledger.besu.ethereum.core.BlockHeaderTestFixture;
 import org.hyperledger.besu.ethereum.core.Util;
+import org.hyperledger.besu.plugin.services.TransactionSelectionService;
 
 import java.util.List;
 
@@ -61,7 +62,8 @@ public class CliqueExtraDataValidationRuleTest {
     when(validatorProvider.getValidatorsAfterBlock(any())).thenReturn(validatorList);
 
     final CliqueContext cliqueContext = new CliqueContext(validatorProvider, null, blockInterface);
-    cliqueProtocolContext = new ProtocolContext(null, null, cliqueContext, null);
+    cliqueProtocolContext =
+        new ProtocolContext(null, null, cliqueContext, mock(TransactionSelectionService.class));
   }
 
   @Test

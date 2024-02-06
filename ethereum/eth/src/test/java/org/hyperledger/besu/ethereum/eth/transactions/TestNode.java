@@ -60,6 +60,7 @@ import org.hyperledger.besu.evm.internal.EvmConfiguration;
 import org.hyperledger.besu.metrics.noop.NoOpMetricsSystem;
 import org.hyperledger.besu.plugin.data.EnodeURL;
 import org.hyperledger.besu.plugin.services.MetricsSystem;
+import org.hyperledger.besu.plugin.services.TransactionSelectionService;
 import org.hyperledger.besu.plugin.services.permissioning.NodeMessagePermissioningProvider;
 import org.hyperledger.besu.testutil.TestClock;
 
@@ -121,7 +122,8 @@ public class TestNode implements Closeable {
     final WorldStateArchive worldStateArchive = createInMemoryWorldStateArchive();
     genesisState.writeStateTo(worldStateArchive.getMutable());
     final ProtocolContext protocolContext =
-        new ProtocolContext(blockchain, worldStateArchive, null, null);
+        new ProtocolContext(
+            blockchain, worldStateArchive, null, mock(TransactionSelectionService.class));
 
     final SyncState syncState = mock(SyncState.class);
     final SynchronizerConfiguration syncConfig = mock(SynchronizerConfiguration.class);
