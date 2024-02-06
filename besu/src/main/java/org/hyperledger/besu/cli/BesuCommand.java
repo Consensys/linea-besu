@@ -1653,7 +1653,7 @@ public class BesuCommand implements DefaultCommandValues, Runnable {
     }
 
     if (isPruningEnabled()) {
-      if (dataStorageConfiguration.getDataStorageFormat().equals(DataStorageFormat.BONSAI)) {
+      if (dataStorageOptions.toDomainObject().getDataStorageFormat().equals(DataStorageFormat.BONSAI)) {
         logger.warn("Forest pruning is ignored with Bonsai data storage format.");
       } else {
         logger.warn(
