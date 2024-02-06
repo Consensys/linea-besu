@@ -146,6 +146,30 @@ public class CallParameter {
         from, to, gasLimit, gasPrice, maxPriorityFeePerGas, maxFeePerGas, value, payload);
   }
 
+  @Override
+  public String toString() {
+    return "CallParameter{"
+        + "from="
+        + from
+        + ", to="
+        + to
+        + ", gasLimit="
+        + gasLimit
+        + ", maxPriorityFeePerGas="
+        + maxPriorityFeePerGas
+        + ", maxFeePerGas="
+        + maxFeePerGas
+        + ", gasPrice="
+        + gasPrice
+        + ", value="
+        + value
+        + ", payload="
+        + payload
+        + ", accessList="
+        + accessList
+        + '}';
+  }
+
   public static CallParameter fromTransaction(final Transaction tx) {
     return new CallParameter(
         tx.getSender(),
