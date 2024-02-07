@@ -60,7 +60,7 @@ public class TransactionSimulationServiceImpl implements TransactionSimulationSe
             .orElseThrow(
                 () ->
                     new IllegalStateException(
-                        "Block header not yet present for chaih head hash: " + blockHash));
+                        "Block header not yet present for chain head hash: " + blockHash));
 
     return transactionSimulator
         .process(

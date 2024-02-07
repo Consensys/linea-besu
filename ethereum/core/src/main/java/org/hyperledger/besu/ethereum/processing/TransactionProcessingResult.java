@@ -206,6 +206,13 @@ public class TransactionProcessingResult
   }
 
   @Override
+  public Optional<String> getInvalidReason() {
+    return (validationResult.isValid()
+        ? Optional.empty()
+        : Optional.of(validationResult.getErrorMessage()));
+  }
+
+  @Override
   public String toString() {
     return "TransactionProcessingResult{"
         + "status="
