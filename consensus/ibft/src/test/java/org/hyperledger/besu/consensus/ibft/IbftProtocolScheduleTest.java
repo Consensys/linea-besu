@@ -47,7 +47,6 @@ import org.hyperledger.besu.evm.internal.EvmConfiguration;
 import java.math.BigInteger;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -110,7 +109,7 @@ public class IbftProtocolScheduleTest {
       final BlockHeader blockHeader,
       final int block) {
     return schedule
-        .getByBlockNumber(block)
+        .getByBlockNumberOrTimestamp(block, blockHeader.getTimestamp())
         .getBlockHeaderValidator()
         .validateHeader(
             blockHeader, parentHeader, protocolContext(validators), HeaderValidationMode.LIGHT);
@@ -121,6 +120,6 @@ public class IbftProtocolScheduleTest {
         null,
         null,
         setupContextWithBftExtraDataEncoder(BftContext.class, validators, bftExtraDataCodec),
-        Optional.empty());
+        null);
   }
 }

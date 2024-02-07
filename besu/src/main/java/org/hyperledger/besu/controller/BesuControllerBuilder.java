@@ -97,9 +97,9 @@ import org.hyperledger.besu.ethereum.worldstate.WorldStateStorage;
 import org.hyperledger.besu.evm.internal.EvmConfiguration;
 import org.hyperledger.besu.metrics.ObservableMetricsSystem;
 import org.hyperledger.besu.plugin.services.MetricsSystem;
+import org.hyperledger.besu.plugin.services.PluginTransactionValidatorService;
+import org.hyperledger.besu.plugin.services.TransactionSelectionService;
 import org.hyperledger.besu.plugin.services.permissioning.NodeMessagePermissioningProvider;
-import org.hyperledger.besu.plugin.services.txselection.PluginTransactionSelectorFactory;
-import org.hyperledger.besu.plugin.services.txvalidator.PluginTransactionValidatorFactory;
 
 import java.io.Closeable;
 import java.math.BigInteger;
@@ -178,18 +178,17 @@ public abstract class BesuControllerBuilder implements MiningParameterOverrides 
   /** The Max peers. */
   protected int maxPeers;
 
-  private int peerLowerBound;
   private int maxRemotelyInitiatedPeers;
   /** The Chain pruner configuration. */
   protected ChainPrunerConfiguration chainPrunerConfiguration = ChainPrunerConfiguration.DEFAULT;
 
   private NetworkingConfiguration networkingConfiguration;
   private Boolean randomPeerPriority;
-  private Optional<PluginTransactionSelectorFactory> transactionSelectorFactory = Optional.empty();
+  private TransactionSelectionService transactionSelectorService;
   /** the Dagger configured context that can provide dependencies */
   protected Optional<BesuComponent> besuComponent = Optional.empty();
 
-  private PluginTransactionValidatorFactory pluginTransactionValidatorFactory;
+  private PluginTransactionValidatorService pluginTransactionValidatorService;
 
   private int numberOfBlocksToCache = 0;
 
@@ -476,21 +475,9 @@ public abstract class BesuControllerBuilder implements MiningParameterOverrides 
   }
 
   /**
-   * Lower bound of peers where we stop actively trying to initiate new outgoing connections
-   *
-   * @param peerLowerBound lower bound of peers where we stop actively trying to initiate new
-   *     outgoing connections
-   * @return the besu controller builder
-   */
-  public BesuControllerBuilder lowerBoundPeers(final int peerLowerBound) {
-    this.peerLowerBound = peerLowerBound;
-    return this;
-  }
-
-  /**
    * Maximum number of remotely initiated peer connections
    *
-   * @param maxRemotelyInitiatedPeers aximum number of remotely initiated peer connections
+   * @param maxRemotelyInitiatedPeers maximum number of remotely initiated peer connections
    * @return the besu controller builder
    */
   public BesuControllerBuilder maxRemotelyInitiatedPeers(final int maxRemotelyInitiatedPeers) {
@@ -511,7 +498,7 @@ public abstract class BesuControllerBuilder implements MiningParameterOverrides 
   }
 
   /**
-   * Chain pruning configuration besu controller builder.
+   * Sets the number of blocks to cache.
    *
    * @param numberOfBlocksToCache the number of blocks to cache
    * @return the besu controller builder
@@ -545,26 +532,26 @@ public abstract class BesuControllerBuilder implements MiningParameterOverrides 
   }
 
   /**
-   * sets the transactionSelectorFactory in the builder
+   * sets the transactionSelectionService in the builder
    *
-   * @param transactionSelectorFactory the optional transaction selector factory
+   * @param transactionSelectionService the transaction selector service
    * @return the besu controller builder
    */
-  public BesuControllerBuilder transactionSelectorFactory(
-      final Optional<PluginTransactionSelectorFactory> transactionSelectorFactory) {
-    this.transactionSelectorFactory = transactionSelectorFactory;
+  public BesuControllerBuilder transactionSelectorService(
+      final TransactionSelectionService transactionSelectionService) {
+    this.transactionSelectorService = transactionSelectionService;
     return this;
   }
 
   /**
-   * sets the pluginTransactionValidatorFactory
+   * sets the pluginTransactionValidatorService
    *
-   * @param pluginTransactionValidatorFactory factory that creates plugin transaction Validators
+   * @param pluginTransactionValidatorService factory that creates plugin transaction Validators
    * @return the besu controller builder
    */
-  public BesuControllerBuilder pluginTransactionValidatorFactory(
-      final PluginTransactionValidatorFactory pluginTransactionValidatorFactory) {
-    this.pluginTransactionValidatorFactory = pluginTransactionValidatorFactory;
+  public BesuControllerBuilder pluginTransactionValidatorService(
+      final PluginTransactionValidatorService pluginTransactionValidatorService) {
+    this.pluginTransactionValidatorService = pluginTransactionValidatorService;
     return this;
   }
 
@@ -589,6 +576,7 @@ public abstract class BesuControllerBuilder implements MiningParameterOverrides 
     checkNotNull(gasLimitCalculator, "Missing gas limit calculator");
     checkNotNull(evmConfiguration, "Missing evm config");
     checkNotNull(networkingConfiguration, "Missing network configuration");
+    checkNotNull(dataStorageConfiguration, "Missing data storage configuration");
     prepForBuild();
 
     final ProtocolSchedule protocolSchedule = createProtocolSchedule();
@@ -631,7 +619,7 @@ public abstract class BesuControllerBuilder implements MiningParameterOverrides 
             worldStateArchive,
             protocolSchedule,
             this::createConsensusContext,
-            transactionSelectorFactory);
+            transactionSelectorService);
     validateContext(protocolContext);
 
     if (chainPrunerConfiguration.getChainPruningEnabled()) {
@@ -681,7 +669,6 @@ public abstract class BesuControllerBuilder implements MiningParameterOverrides 
             maxMessageSize,
             messagePermissioningProviders,
             nodeKey.getPublicKey().getEncodedBytes(),
-            peerLowerBound,
             maxPeers,
             maxRemotelyInitiatedPeers,
             randomPeerPriority);
@@ -726,7 +713,7 @@ public abstract class BesuControllerBuilder implements MiningParameterOverrides 
             metricsSystem,
             syncState,
             transactionPoolConfiguration,
-            pluginTransactionValidatorFactory,
+            pluginTransactionValidatorService,
             besuComponent.map(BesuComponent::getBlobCache).orElse(new BlobCache()));
 
     final List<PeerValidator> peerValidators = createPeerValidators(protocolSchedule);
@@ -1068,7 +1055,7 @@ public abstract class BesuControllerBuilder implements MiningParameterOverrides 
    * @param worldStateArchive the world state archive
    * @param protocolSchedule the protocol schedule
    * @param consensusContextFactory the consensus context factory
-   * @param transactionSelectorFactory optional transaction selector factory
+   * @param transactionSelectionService optional transaction selector factory
    * @return the protocol context
    */
   protected ProtocolContext createProtocolContext(
@@ -1076,13 +1063,13 @@ public abstract class BesuControllerBuilder implements MiningParameterOverrides 
       final WorldStateArchive worldStateArchive,
       final ProtocolSchedule protocolSchedule,
       final ConsensusContextFactory consensusContextFactory,
-      final Optional<PluginTransactionSelectorFactory> transactionSelectorFactory) {
+      final TransactionSelectionService transactionSelectionService) {
     return ProtocolContext.init(
         blockchain,
         worldStateArchive,
         protocolSchedule,
         consensusContextFactory,
-        transactionSelectorFactory);
+        transactionSelectionService);
   }
 
   private Optional<SnapProtocolManager> createSnapProtocolManager(
@@ -1161,8 +1148,7 @@ public abstract class BesuControllerBuilder implements MiningParameterOverrides 
 
     final CheckpointConfigOptions checkpointConfigOptions =
         genesisConfig.getConfigOptions(genesisConfigOverrides).getCheckpointOptions();
-    if (SyncMode.X_CHECKPOINT.equals(syncConfig.getSyncMode())
-        && checkpointConfigOptions.isValid()) {
+    if (SyncMode.isCheckpointSync(syncConfig.getSyncMode()) && checkpointConfigOptions.isValid()) {
       validators.add(
           new CheckpointBlocksPeerValidator(
               protocolSchedule,

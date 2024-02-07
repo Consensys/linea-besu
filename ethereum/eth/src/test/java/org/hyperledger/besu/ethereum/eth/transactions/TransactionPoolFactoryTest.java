@@ -51,6 +51,7 @@ import org.hyperledger.besu.ethereum.mainnet.ProtocolSpecAdapters;
 import org.hyperledger.besu.ethereum.worldstate.WorldStateArchive;
 import org.hyperledger.besu.evm.internal.EvmConfiguration;
 import org.hyperledger.besu.metrics.noop.NoOpMetricsSystem;
+import org.hyperledger.besu.plugin.services.PluginTransactionValidatorService;
 import org.hyperledger.besu.plugin.services.permissioning.NodeMessagePermissioningProvider;
 import org.hyperledger.besu.testutil.TestClock;
 
@@ -108,7 +109,6 @@ public class TransactionPoolFactoryTest {
             EthProtocolConfiguration.DEFAULT_MAX_MESSAGE_SIZE,
             Collections.singletonList(nmpp),
             Bytes.random(64),
-            25,
             25,
             25,
             false);
@@ -357,7 +357,7 @@ public class TransactionPoolFactoryTest {
                         .txMessageKeepAliveSeconds(1)
                         .build())
                 .build(),
-            null,
+            mock(PluginTransactionValidatorService.class),
             new BlobCache());
 
     txPool.setEnabled();
