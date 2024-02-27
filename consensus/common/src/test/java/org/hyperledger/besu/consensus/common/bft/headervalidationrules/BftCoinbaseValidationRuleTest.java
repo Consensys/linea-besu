@@ -16,17 +16,16 @@ package org.hyperledger.besu.consensus.common.bft.headervalidationrules;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hyperledger.besu.consensus.common.bft.BftContextBuilder.setupContextWithValidators;
-import static org.mockito.Mockito.mock;
 
 import org.hyperledger.besu.cryptoservices.NodeKey;
 import org.hyperledger.besu.cryptoservices.NodeKeyUtils;
 import org.hyperledger.besu.datatypes.Address;
 import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.ethereum.ProtocolContext;
+import org.hyperledger.besu.ethereum.chain.BadBlockManager;
 import org.hyperledger.besu.ethereum.core.BlockHeader;
 import org.hyperledger.besu.ethereum.core.BlockHeaderTestFixture;
 import org.hyperledger.besu.ethereum.core.Util;
-import org.hyperledger.besu.plugin.services.TransactionSelectionService;
 
 import java.util.List;
 
@@ -53,10 +52,7 @@ public class BftCoinbaseValidationRuleTest {
 
     final ProtocolContext context =
         new ProtocolContext(
-            null,
-            null,
-            setupContextWithValidators(validators),
-            mock(TransactionSelectionService.class));
+            null, null, setupContextWithValidators(validators), new BadBlockManager());
 
     final BftCoinbaseValidationRule coinbaseValidationRule = new BftCoinbaseValidationRule();
 
@@ -77,10 +73,7 @@ public class BftCoinbaseValidationRuleTest {
 
     final ProtocolContext context =
         new ProtocolContext(
-            null,
-            null,
-            setupContextWithValidators(validators),
-            mock(TransactionSelectionService.class));
+            null, null, setupContextWithValidators(validators), new BadBlockManager());
 
     final BftCoinbaseValidationRule coinbaseValidationRule = new BftCoinbaseValidationRule();
 

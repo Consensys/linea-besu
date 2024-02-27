@@ -32,6 +32,7 @@ import org.hyperledger.besu.ethereum.ProtocolContext;
 import org.hyperledger.besu.ethereum.blockcreation.BlockCreator;
 import org.hyperledger.besu.ethereum.blockcreation.DefaultBlockScheduler;
 import org.hyperledger.besu.ethereum.blockcreation.txselection.TransactionSelectionResults;
+import org.hyperledger.besu.ethereum.chain.BadBlockManager;
 import org.hyperledger.besu.ethereum.chain.MinedBlockObserver;
 import org.hyperledger.besu.ethereum.core.Block;
 import org.hyperledger.besu.ethereum.core.BlockBody;
@@ -45,7 +46,6 @@ import org.hyperledger.besu.ethereum.mainnet.DefaultProtocolSchedule;
 import org.hyperledger.besu.ethereum.mainnet.HeaderValidationMode;
 import org.hyperledger.besu.ethereum.mainnet.ProtocolSchedule;
 import org.hyperledger.besu.ethereum.mainnet.ProtocolSpec;
-import org.hyperledger.besu.plugin.services.TransactionSelectionService;
 import org.hyperledger.besu.util.Subscribers;
 
 import java.math.BigInteger;
@@ -71,7 +71,7 @@ class CliqueBlockMinerTest {
 
     final CliqueContext cliqueContext = new CliqueContext(validatorProvider, null, null);
     final ProtocolContext protocolContext =
-        new ProtocolContext(null, null, cliqueContext, mock(TransactionSelectionService.class));
+        new ProtocolContext(null, null, cliqueContext, new BadBlockManager());
 
     final CliqueBlockCreator blockCreator = mock(CliqueBlockCreator.class);
     final Function<BlockHeader, CliqueBlockCreator> blockCreatorSupplier =
@@ -126,7 +126,7 @@ class CliqueBlockMinerTest {
 
     final CliqueContext cliqueContext = new CliqueContext(validatorProvider, null, null);
     final ProtocolContext protocolContext =
-        new ProtocolContext(null, null, cliqueContext, mock(TransactionSelectionService.class));
+        new ProtocolContext(null, null, cliqueContext, new BadBlockManager());
 
     final CliqueBlockCreator blockCreator = mock(CliqueBlockCreator.class);
     final Function<BlockHeader, CliqueBlockCreator> blockCreatorSupplier =

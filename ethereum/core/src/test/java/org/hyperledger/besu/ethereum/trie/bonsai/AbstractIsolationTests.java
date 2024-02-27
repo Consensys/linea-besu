@@ -32,6 +32,7 @@ import org.hyperledger.besu.datatypes.Wei;
 import org.hyperledger.besu.ethereum.BlockProcessingResult;
 import org.hyperledger.besu.ethereum.ProtocolContext;
 import org.hyperledger.besu.ethereum.blockcreation.AbstractBlockCreator;
+import org.hyperledger.besu.ethereum.chain.BadBlockManager;
 import org.hyperledger.besu.ethereum.chain.GenesisState;
 import org.hyperledger.besu.ethereum.chain.MutableBlockchain;
 import org.hyperledger.besu.ethereum.core.Block;
@@ -72,11 +73,10 @@ import org.hyperledger.besu.evm.internal.EvmConfiguration;
 import org.hyperledger.besu.metrics.noop.NoOpMetricsSystem;
 import org.hyperledger.besu.plugin.services.BesuConfiguration;
 import org.hyperledger.besu.plugin.services.PluginTransactionValidatorService;
-import org.hyperledger.besu.plugin.services.TransactionSelectionService;
+import org.hyperledger.besu.plugin.services.storage.DataStorageFormat;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.RocksDBKeyValueStorageFactory;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.RocksDBMetricsFactory;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.RocksDBFactoryConfiguration;
-import org.hyperledger.besu.plugin.services.txselection.PluginTransactionSelectorFactory;
 import org.hyperledger.besu.plugin.services.txvalidator.PluginTransactionValidatorFactory;
 import org.hyperledger.besu.testutil.DeterministicEthScheduler;
 
@@ -105,7 +105,8 @@ public abstract class AbstractIsolationTests {
           SignatureAlgorithmFactory.getInstance()
               .createKeyPair(SECPPrivateKey.create(Bytes32.fromHexString(key), "ECDSA"));
   protected final ProtocolSchedule protocolSchedule =
-      MainnetProtocolSchedule.fromConfig(GenesisConfigFile.development().getConfigOptions());
+      MainnetProtocolSchedule.fromConfig(
+          GenesisConfigFile.development().getConfigOptions(), new BadBlockManager());
   protected final GenesisState genesisState =
       GenesisState.fromConfig(GenesisConfigFile.development(), protocolSchedule);
   protected final MutableBlockchain blockchain = createInMemoryBlockchain(genesisState.getBlock());
@@ -133,7 +134,8 @@ public abstract class AbstractIsolationTests {
               new EndLayer(txPoolMetrics),
               txPoolMetrics,
               transactionReplacementTester,
-              new BlobCache()));
+              new BlobCache(),
+              MiningParameters.newDefault()));
 
   protected final List<GenesisAllocation> accounts =
       GenesisConfigFile.development()
@@ -162,21 +164,7 @@ public abstract class AbstractIsolationTests {
             EvmConfiguration.DEFAULT);
     var ws = archive.getMutable();
     genesisState.writeStateTo(ws);
-    protocolContext =
-        new ProtocolContext(
-            blockchain,
-            archive,
-            null,
-            new TransactionSelectionService() {
-              @Override
-              public Optional<PluginTransactionSelectorFactory> get() {
-                return Optional.empty();
-              }
-
-              @Override
-              public void registerTransactionSelectorFactory(
-                  final PluginTransactionSelectorFactory transactionSelectorFactory) {}
-            });
+    protocolContext = new ProtocolContext(blockchain, archive, null, new BadBlockManager());
     ethContext = mock(EthContext.class, RETURNS_DEEP_STUBS);
     when(ethContext.getEthPeers().subscribeConnect(any())).thenReturn(1L);
     transactionPool =
@@ -213,7 +201,6 @@ public abstract class AbstractIsolationTests {
                         8388608 /*CACHE_CAPACITY*/,
                         false),
                 Arrays.asList(KeyValueSegmentIdentifier.values()),
-                2,
                 RocksDBMetricsFactory.PUBLIC_ROCKS_DB_METRICS))
         .withCommonConfiguration(
             new BesuConfiguration() {
@@ -229,8 +216,8 @@ public abstract class AbstractIsolationTests {
               }
 
               @Override
-              public int getDatabaseVersion() {
-                return 2;
+              public DataStorageFormat getDatabaseFormat() {
+                return DataStorageFormat.BONSAI;
               }
 
               @Override

@@ -71,14 +71,11 @@ import org.hyperledger.besu.ethereum.eth.transactions.TransactionPoolConfigurati
 import org.hyperledger.besu.ethereum.eth.transactions.TransactionPoolMetrics;
 import org.hyperledger.besu.ethereum.eth.transactions.sorter.BaseFeePendingTransactionsSorter;
 import org.hyperledger.besu.ethereum.mainnet.ProtocolSchedule;
-import org.hyperledger.besu.ethereum.mainnet.ProtocolSpec;
 import org.hyperledger.besu.ethereum.mainnet.feemarket.BaseFeeMarket;
 import org.hyperledger.besu.ethereum.mainnet.feemarket.LondonFeeMarket;
 import org.hyperledger.besu.ethereum.trie.MerkleTrieException;
 import org.hyperledger.besu.ethereum.worldstate.WorldStateArchive;
 import org.hyperledger.besu.metrics.StubMetricsSystem;
-import org.hyperledger.besu.plugin.services.TransactionSelectionService;
-import org.hyperledger.besu.plugin.services.txselection.PluginTransactionSelectorFactory;
 import org.hyperledger.besu.testutil.TestClock;
 import org.hyperledger.besu.util.number.Fraction;
 
@@ -188,35 +185,9 @@ public class MergeCoordinatorTest implements MergeGenesisConfigHelper {
     when(mergeContext.as(MergeContext.class)).thenReturn(mergeContext);
     when(mergeContext.getTerminalTotalDifficulty())
         .thenReturn(genesisState.getBlock().getHeader().getDifficulty().plus(1L));
-    doAnswer(
-            getSpecInvocation -> {
-              ProtocolSpec spec = (ProtocolSpec) spy(getSpecInvocation.callRealMethod());
-              doAnswer(
-                      getBadBlockInvocation -> {
-                        return badBlockManager;
-                      })
-                  .when(spec)
-                  .getBadBlocksManager();
-              return spec;
-            })
-        .when(protocolSchedule)
-        .getByBlockHeader(any(BlockHeader.class));
 
     protocolContext =
-        new ProtocolContext(
-            blockchain,
-            worldStateArchive,
-            mergeContext,
-            new TransactionSelectionService() {
-              @Override
-              public Optional<PluginTransactionSelectorFactory> get() {
-                return Optional.empty();
-              }
-
-              @Override
-              public void registerTransactionSelectorFactory(
-                  final PluginTransactionSelectorFactory transactionSelectorFactory) {}
-            });
+        new ProtocolContext(blockchain, worldStateArchive, mergeContext, badBlockManager);
     var mutable = worldStateArchive.getMutable();
     genesisState.writeStateTo(mutable);
     mutable.persist(null);

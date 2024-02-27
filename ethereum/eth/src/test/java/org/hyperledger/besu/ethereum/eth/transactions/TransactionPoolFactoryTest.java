@@ -28,9 +28,11 @@ import static org.mockito.Mockito.when;
 import org.hyperledger.besu.config.StubGenesisConfigOptions;
 import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.ethereum.ProtocolContext;
+import org.hyperledger.besu.ethereum.chain.BadBlockManager;
 import org.hyperledger.besu.ethereum.chain.BlockAddedObserver;
 import org.hyperledger.besu.ethereum.chain.MutableBlockchain;
 import org.hyperledger.besu.ethereum.core.BlockHeaderTestFixture;
+import org.hyperledger.besu.ethereum.core.MiningParameters;
 import org.hyperledger.besu.ethereum.core.PrivacyParameters;
 import org.hyperledger.besu.ethereum.eth.EthProtocolConfiguration;
 import org.hyperledger.besu.ethereum.eth.manager.EthContext;
@@ -251,7 +253,8 @@ public class TransactionPoolFactoryTest {
             transactionsMessageSender,
             newPooledTransactionHashesMessageSender,
             null,
-            new BlobCache());
+            new BlobCache(),
+            MiningParameters.newDefault());
 
     ethProtocolManager =
         new EthProtocolManager(
@@ -328,7 +331,8 @@ public class TransactionPoolFactoryTest {
                 ProtocolSpecAdapters.create(0, Function.identity()),
                 PrivacyParameters.DEFAULT,
                 false,
-                EvmConfiguration.DEFAULT)
+                EvmConfiguration.DEFAULT,
+                new BadBlockManager())
             .createProtocolSchedule();
 
     protocolContext = mock(ProtocolContext.class);
@@ -358,7 +362,8 @@ public class TransactionPoolFactoryTest {
                         .build())
                 .build(),
             mock(PluginTransactionValidatorService.class),
-            new BlobCache());
+            new BlobCache(),
+            MiningParameters.newDefault());
 
     txPool.setEnabled();
     return txPool;

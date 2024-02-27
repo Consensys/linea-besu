@@ -19,6 +19,7 @@ import static org.hyperledger.besu.ethereum.core.InMemoryKeyValueStorageProvider
 import org.hyperledger.besu.config.GenesisConfigFile;
 import org.hyperledger.besu.config.StubGenesisConfigOptions;
 import org.hyperledger.besu.ethereum.ProtocolContext;
+import org.hyperledger.besu.ethereum.chain.BadBlockManager;
 import org.hyperledger.besu.ethereum.chain.DefaultBlockchain;
 import org.hyperledger.besu.ethereum.chain.GenesisState;
 import org.hyperledger.besu.ethereum.chain.MutableBlockchain;
@@ -31,13 +32,10 @@ import org.hyperledger.besu.ethereum.storage.keyvalue.VariablesKeyValueStorage;
 import org.hyperledger.besu.ethereum.worldstate.WorldStateArchive;
 import org.hyperledger.besu.evm.internal.EvmConfiguration;
 import org.hyperledger.besu.metrics.noop.NoOpMetricsSystem;
-import org.hyperledger.besu.plugin.services.TransactionSelectionService;
 import org.hyperledger.besu.plugin.services.storage.KeyValueStorage;
-import org.hyperledger.besu.plugin.services.txselection.PluginTransactionSelectorFactory;
 import org.hyperledger.besu.services.kvstore.InMemoryKeyValueStorage;
 
 import java.math.BigInteger;
-import java.util.Optional;
 import java.util.function.Function;
 
 public class ExecutionContextTestFixture {
@@ -72,20 +70,7 @@ public class ExecutionContextTestFixture {
     this.stateArchive = createInMemoryWorldStateArchive();
     this.protocolSchedule = protocolSchedule;
     this.protocolContext =
-        new ProtocolContext(
-            blockchain,
-            stateArchive,
-            null,
-            new TransactionSelectionService() {
-              @Override
-              public Optional<PluginTransactionSelectorFactory> get() {
-                return Optional.empty();
-              }
-
-              @Override
-              public void registerTransactionSelectorFactory(
-                  final PluginTransactionSelectorFactory transactionSelectorFactory) {}
-            });
+        new ProtocolContext(blockchain, stateArchive, null, new BadBlockManager());
     genesisState.writeStateTo(stateArchive.getMutable());
   }
 
@@ -154,7 +139,8 @@ public class ExecutionContextTestFixture {
                     ProtocolSpecAdapters.create(0, Function.identity()),
                     new PrivacyParameters(),
                     false,
-                    EvmConfiguration.DEFAULT)
+                    EvmConfiguration.DEFAULT,
+                    new BadBlockManager())
                 .createProtocolSchedule();
       }
       if (blockchainKeyValueStorage == null) {

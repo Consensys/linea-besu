@@ -34,6 +34,7 @@ import org.hyperledger.besu.ethereum.core.BlockBody;
 import org.hyperledger.besu.ethereum.core.BlockDataGenerator;
 import org.hyperledger.besu.ethereum.core.BlockHeaderTestFixture;
 import org.hyperledger.besu.ethereum.core.Difficulty;
+import org.hyperledger.besu.ethereum.core.MiningParameters;
 import org.hyperledger.besu.ethereum.core.MutableWorldState;
 import org.hyperledger.besu.ethereum.core.TransactionReceipt;
 import org.hyperledger.besu.ethereum.core.TransactionTestFixture;
@@ -130,9 +131,6 @@ public class BesuEventsImplTest {
     when(mockEthContext.getScheduler()).thenReturn(new DeterministicEthScheduler());
     lenient().when(mockEthPeers.streamAvailablePeers()).thenAnswer(z -> Stream.empty());
     when(mockProtocolContext.getBlockchain()).thenReturn(blockchain);
-    lenient()
-        .when(mockProtocolContext.getTransactionSelectionService())
-        .thenReturn(new TransactionSelectionServiceImpl());
     lenient().when(mockProtocolContext.getWorldStateArchive()).thenReturn(mockWorldStateArchive);
     lenient().when(mockProtocolSchedule.getByBlockHeader(any())).thenReturn(mockProtocolSpec);
     lenient()
@@ -170,7 +168,8 @@ public class BesuEventsImplTest {
             syncState,
             txPoolConfig,
             new PluginTransactionValidatorServiceImpl(),
-            new BlobCache());
+            new BlobCache(),
+            MiningParameters.newDefault());
 
     serviceImpl = new BesuEventsImpl(blockchain, blockBroadcaster, transactionPool, syncState);
   }
