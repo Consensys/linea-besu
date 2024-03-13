@@ -192,10 +192,16 @@ public abstract class AbstractBlockCreator implements AsyncBlockCreator {
       final PluginTransactionSelector pluginTransactionSelector =
           miningParameters.getTransactionSelectionService().createPluginTransactionSelector();
 
+      pluginTransactionSelector.beforeSelectionStarts(processableBlockHeader);
+
+      throwIfStopped();
+
       final BlockAwareOperationTracer operationTracer =
           pluginTransactionSelector.getOperationTracer();
 
       operationTracer.traceStartBlock(processableBlockHeader);
+
+      throwIfStopped();
 
       final TransactionSelectionResults transactionResults =
           selectTransactions(
@@ -279,9 +285,15 @@ public abstract class AbstractBlockCreator implements AsyncBlockCreator {
       final BlockBody blockBody =
           new BlockBody(
               transactionResults.getSelectedTransactions(), ommers, withdrawals, maybeDeposits);
-      final Block block = new Block(blockHeader, blockBody);
 
       operationTracer.traceEndBlock(blockHeader, blockBody);
+
+      throwIfStopped();
+
+      final Block block = new Block(blockHeader, blockBody);
+      pluginTransactionSelector.afterSelectionEnds(block);
+
+      throwIfStopped();
 
       return new BlockCreationResult(block, transactionResults);
     } catch (final SecurityModuleException ex) {

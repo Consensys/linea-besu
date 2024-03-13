@@ -14,20 +14,29 @@
  */
 package org.hyperledger.besu.plugin.data;
 
+import org.apache.tuweni.bytes.Bytes;
+
 /** The minimum set of data for a BlockContext. */
-public interface BlockContext {
+public interface Block {
 
   /**
    * A {@link BlockHeader} object.
    *
    * @return A {@link BlockHeader}
    */
-  BlockHeader getBlockHeader();
+  BlockHeader getHeader();
 
   /**
    * A {@link BlockBody} object.
    *
    * @return A {@link BlockBody}
    */
-  BlockBody getBlockBody();
+  BlockBody getBody();
+
+  /**
+   * Serialized the block to RLP
+   *
+   * @return RLP bytes
+   */
+  Bytes toRlp();
 }

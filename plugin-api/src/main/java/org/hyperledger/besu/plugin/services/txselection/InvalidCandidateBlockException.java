@@ -1,5 +1,5 @@
 /*
- * Copyright ConsenSys AG.
+ * Copyright Hyperledger Besu Contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -12,16 +12,16 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-package org.hyperledger.besu.plugin.data;
+package org.hyperledger.besu.plugin.services.txselection;
 
-import org.apache.tuweni.units.bigints.UInt256;
-
-/** The minimum set of data for a PropagatedBlockContext. */
-public interface PropagatedBlockContext extends Block {
+/** Exception to indicate that the candidate block is not valid and must not be proposed */
+public class InvalidCandidateBlockException extends Exception {
   /**
-   * A scalar value corresponding to the total difficulty.
+   * Create a new InvalidCandidateBlockException
    *
-   * @return A UInt256 value corresponding to the total difficulty.
+   * @param message the reason why the candidate block is invalid
    */
-  UInt256 getTotalDifficulty();
+  public InvalidCandidateBlockException(final String message) {
+    super(message);
+  }
 }

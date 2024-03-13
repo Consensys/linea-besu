@@ -19,10 +19,7 @@ import org.hyperledger.besu.ethereum.blockcreation.BlockCreator.BlockCreationRes
 import org.hyperledger.besu.ethereum.chain.MinedBlockObserver;
 import org.hyperledger.besu.ethereum.core.Block;
 import org.hyperledger.besu.ethereum.core.BlockHeader;
-import org.hyperledger.besu.ethereum.core.BlockImporter;
 import org.hyperledger.besu.ethereum.core.Transaction;
-import org.hyperledger.besu.ethereum.mainnet.BlockImportResult;
-import org.hyperledger.besu.ethereum.mainnet.HeaderValidationMode;
 import org.hyperledger.besu.ethereum.mainnet.ProtocolSchedule;
 import org.hyperledger.besu.util.Subscribers;
 
@@ -55,9 +52,9 @@ public class BlockMiner<M extends AbstractBlockCreator> implements Runnable {
 
   protected final ProtocolContext protocolContext;
   protected final BlockHeader parentHeader;
-//
-//  private final ProtocolSchedule protocolSchedule;
-//  private final Subscribers<MinedBlockObserver> observers;
+  //
+  //  private final ProtocolSchedule protocolSchedule;
+  //  private final Subscribers<MinedBlockObserver> observers;
   private final AbstractBlockScheduler scheduler;
 
   public BlockMiner(
@@ -70,8 +67,8 @@ public class BlockMiner<M extends AbstractBlockCreator> implements Runnable {
     this.blockCreatorFactory = blockCreatorFactory;
     this.minerBlockCreator = blockCreatorFactory.apply(parentHeader);
     this.protocolContext = protocolContext;
-//    this.protocolSchedule = protocolSchedule;
-//    this.observers = observers;
+    //    this.protocolSchedule = protocolSchedule;
+    //    this.observers = observers;
     this.scheduler = scheduler;
     this.parentHeader = parentHeader;
   }
@@ -142,26 +139,26 @@ public class BlockMiner<M extends AbstractBlockCreator> implements Runnable {
     final Block block = minerBlockCreator.createBlock(newBlockTimestamp).getBlock();
     final double taskTimeInSec = stopwatch.elapsed(TimeUnit.MILLISECONDS) / 1000.0;
     LOG.info(
-            String.format(
-                    "Produced #%,d / %d tx / %d om / %,d (%01.1f%%) gas / (%s) in %01.3fs",
-                    block.getHeader().getNumber(),
-                    block.getBody().getTransactions().size(),
-                    block.getBody().getOmmers().size(),
-                    block.getHeader().getGasUsed(),
-                    (block.getHeader().getGasUsed() * 100.0) / block.getHeader().getGasLimit(),
-                    block.getHash(),
-                    taskTimeInSec));
+        String.format(
+            "Produced #%,d / %d tx / %d om / %,d (%01.1f%%) gas / (%s) in %01.3fs",
+            block.getHeader().getNumber(),
+            block.getBody().getTransactions().size(),
+            block.getBody().getOmmers().size(),
+            block.getHeader().getGasUsed(),
+            (block.getHeader().getGasUsed() * 100.0) / block.getHeader().getGasLimit(),
+            block.getHash(),
+            taskTimeInSec));
 
     return true;
   }
 
   public void cancel() {
-//    minerBlockCreator.cancel();
+    //    minerBlockCreator.cancel();
   }
 
-//  private void notifyNewBlockListeners(final Block block) {
-//    observers.forEach(obs -> obs.blockMined(block));
-//  }
+  //  private void notifyNewBlockListeners(final Block block) {
+  //    observers.forEach(obs -> obs.blockMined(block));
+  //  }
 
   public BlockHeader getParentHeader() {
     return parentHeader;

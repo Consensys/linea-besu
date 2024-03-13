@@ -25,7 +25,7 @@ import java.util.Optional;
 
 import org.apache.tuweni.bytes.Bytes;
 
-public class Block {
+public class Block implements org.hyperledger.besu.plugin.data.Block {
 
   private final BlockHeader header;
   private final BlockBody body;
@@ -35,10 +35,12 @@ public class Block {
     this.body = body;
   }
 
+  @Override
   public BlockHeader getHeader() {
     return header;
   }
 
+  @Override
   public BlockBody getBody() {
     return body;
   }
@@ -47,6 +49,7 @@ public class Block {
     return header.getHash();
   }
 
+  @Override
   public Bytes toRlp() {
     return RLP.encode(this::writeTo);
   }

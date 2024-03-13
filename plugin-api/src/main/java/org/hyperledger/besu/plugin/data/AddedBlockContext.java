@@ -17,7 +17,7 @@ package org.hyperledger.besu.plugin.data;
 import java.util.List;
 
 /** The minimum set of data for an AddedBlockContext. */
-public interface AddedBlockContext extends BlockContext {
+public interface AddedBlockContext extends Block {
   /**
    * A list of transaction receipts for the added block.
    *

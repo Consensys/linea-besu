@@ -228,7 +228,7 @@ public class BesuEventsImplTest {
     blockBroadcaster.propagate(block, Difficulty.of(1));
 
     assertThat(result.get()).isNotNull();
-    assertThat(result.get().getBlockHeader()).isEqualTo(block.getHeader());
+    assertThat(result.get().getHeader()).isEqualTo(block.getHeader());
     assertThat(result.get().getTotalDifficulty().toBigInteger()).isEqualTo(BigInteger.ONE);
   }
 
@@ -242,7 +242,7 @@ public class BesuEventsImplTest {
     blockBroadcaster.propagate(block, Difficulty.of(2));
 
     assertThat(result.get()).isNotNull();
-    assertThat(result.get().getBlockHeader()).isEqualTo(block.getHeader());
+    assertThat(result.get().getHeader()).isEqualTo(block.getHeader());
     assertThat(result.get().getTotalDifficulty().toBigInteger()).isEqualTo(BigInteger.valueOf(2L));
     serviceImpl.removeBlockPropagatedListener(id);
     result.set(null);
@@ -275,7 +275,7 @@ public class BesuEventsImplTest {
     List<TransactionReceipt> transactionReceipts = gen.receipts(block);
     blockchain.appendBlock(block, transactionReceipts);
     assertThat(result.get()).isNotNull();
-    assertThat(result.get().getBlockHeader()).isEqualTo(block.getHeader());
+    assertThat(result.get().getHeader()).isEqualTo(block.getHeader());
     assertThat(result.get().getTransactionReceipts()).isEqualTo(transactionReceipts);
   }
 
@@ -344,7 +344,7 @@ public class BesuEventsImplTest {
     List<TransactionReceipt> transactionReceipts = gen.receipts(reorgBlock);
     blockchain.appendBlock(reorgBlock, transactionReceipts);
     assertThat(result.get()).isNotNull();
-    assertThat(result.get().getBlockHeader()).isEqualTo(reorgBlock.getHeader());
+    assertThat(result.get().getHeader()).isEqualTo(reorgBlock.getHeader());
     assertThat(result.get().getTransactionReceipts()).isEqualTo(transactionReceipts);
   }
 

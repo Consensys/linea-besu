@@ -68,7 +68,7 @@ public class TestBesuEventsPlugin implements BesuPlugin {
   }
 
   private void onBlockAnnounce(final PropagatedBlockContext propagatedBlockContext) {
-    final BlockHeader header = propagatedBlockContext.getBlockHeader();
+    final BlockHeader header = propagatedBlockContext.getHeader();
     final int blockCount = blockCounter.incrementAndGet();
     LOG.info("I got a new block! (I've seen {}) - {}", blockCount, header);
     try {

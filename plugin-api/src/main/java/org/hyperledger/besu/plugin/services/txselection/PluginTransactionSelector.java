@@ -19,6 +19,10 @@ import static org.hyperledger.besu.plugin.data.TransactionSelectionResult.SELECT
 
 import org.hyperledger.besu.datatypes.PendingTransaction;
 import org.hyperledger.besu.plugin.Unstable;
+import org.hyperledger.besu.plugin.data.Block;
+import org.hyperledger.besu.plugin.data.BlockBody;
+import org.hyperledger.besu.plugin.data.BlockHeader;
+import org.hyperledger.besu.plugin.data.ProcessableBlockHeader;
 import org.hyperledger.besu.plugin.data.TransactionProcessingResult;
 import org.hyperledger.besu.plugin.data.TransactionSelectionResult;
 import org.hyperledger.besu.plugin.services.tracer.BlockAwareOperationTracer;
@@ -93,4 +97,24 @@ public interface PluginTransactionSelector {
   default void onTransactionNotSelected(
       final TransactionEvaluationContext<? extends PendingTransaction> evaluationContext,
       final TransactionSelectionResult transactionSelectionResult) {}
+
+  /**
+   * Method called before any transaction is evaluated from block inclusion, and only the candidate
+   * block header is present. Useful to initialize the selector.
+   *
+   * @param blockHeader the candidate block header
+   */
+  default void beforeSelectionStarts(final ProcessableBlockHeader blockHeader) {}
+
+  /**
+   * Method called after the transactions have been evaluated from block inclusion, and both the
+   * candidate block header and body are present. Useful to perform final checks on the candidate
+   * block, and discard the candidate block if it is invalid.
+   *
+   * @param block the candidate block
+   * @throws InvalidCandidateBlockException in case the candidate block has not passed the final
+   *     checks.
+   */
+  default void afterSelectionEnds(final Block block)
+      throws InvalidCandidateBlockException {}
 }

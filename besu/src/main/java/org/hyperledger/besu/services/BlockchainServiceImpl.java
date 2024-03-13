@@ -18,17 +18,15 @@ package org.hyperledger.besu.services;
 import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.datatypes.Wei;
 import org.hyperledger.besu.ethereum.ProtocolContext;
-import org.hyperledger.besu.ethereum.core.BlockBody;
 import org.hyperledger.besu.ethereum.mainnet.ProtocolSchedule;
 import org.hyperledger.besu.ethereum.mainnet.feemarket.BaseFeeMarket;
 import org.hyperledger.besu.ethereum.mainnet.feemarket.FeeMarket;
 import org.hyperledger.besu.plugin.Unstable;
-import org.hyperledger.besu.plugin.data.BlockContext;
+import org.hyperledger.besu.plugin.data.Block;
 import org.hyperledger.besu.plugin.data.BlockHeader;
 import org.hyperledger.besu.plugin.services.BlockchainService;
 
 import java.util.Optional;
-import java.util.function.Supplier;
 
 /** The Blockchain service implementation. */
 @Unstable
@@ -58,11 +56,8 @@ public class BlockchainServiceImpl implements BlockchainService {
    * @return the BlockContext if block exists otherwise empty
    */
   @Override
-  public Optional<BlockContext> getBlockByNumber(final long number) {
-    return protocolContext
-        .getBlockchain()
-        .getBlockByNumber(number)
-        .map(block -> blockContext(block::getHeader, block::getBody));
+  public Optional<? extends Block> getBlockByNumber(final long number) {
+    return protocolContext.getBlockchain().getBlockByNumber(number);
   }
 
   @Override
@@ -90,21 +85,5 @@ public class BlockchainServiceImpl implements BlockchainService {
                     chainHeadHeader.getBaseFee().orElse(Wei.ZERO),
                     chainHeadHeader.getGasUsed(),
                     feeMarket.targetGasUsed(chainHeadHeader)));
-  }
-
-  private static BlockContext blockContext(
-      final Supplier<BlockHeader> blockHeaderSupplier,
-      final Supplier<BlockBody> blockBodySupplier) {
-    return new BlockContext() {
-      @Override
-      public BlockHeader getBlockHeader() {
-        return blockHeaderSupplier.get();
-      }
-
-      @Override
-      public BlockBody getBlockBody() {
-        return blockBodySupplier.get();
-      }
-    };
   }
 }

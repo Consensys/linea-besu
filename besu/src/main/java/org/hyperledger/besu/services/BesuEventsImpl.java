@@ -14,11 +14,10 @@
  */
 package org.hyperledger.besu.services;
 
-import static java.util.stream.Collectors.toUnmodifiableList;
-
 import org.hyperledger.besu.datatypes.Address;
 import org.hyperledger.besu.ethereum.api.query.LogsQuery;
 import org.hyperledger.besu.ethereum.chain.Blockchain;
+import org.hyperledger.besu.ethereum.core.Block;
 import org.hyperledger.besu.ethereum.core.BlockBody;
 import org.hyperledger.besu.ethereum.core.Difficulty;
 import org.hyperledger.besu.ethereum.core.LogWithMetadata;
@@ -33,8 +32,8 @@ import org.hyperledger.besu.plugin.data.PropagatedBlockContext;
 import org.hyperledger.besu.plugin.services.BesuEvents;
 
 import java.util.List;
-import java.util.function.Supplier;
 
+import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.units.bigints.UInt256;
 
@@ -68,8 +67,7 @@ public class BesuEventsImpl implements BesuEvents {
   public long addBlockPropagatedListener(final BlockPropagatedListener listener) {
     return blockBroadcaster.subscribePropagateNewBlocks(
         (block, totalDifficulty) ->
-            listener.onBlockPropagated(
-                blockPropagatedContext(block::getHeader, block::getBody, () -> totalDifficulty)));
+            listener.onBlockPropagated(blockPropagatedContext(block, totalDifficulty)));
   }
 
   @Override
@@ -82,10 +80,7 @@ public class BesuEventsImpl implements BesuEvents {
     return blockchain.observeBlockAdded(
         event ->
             listener.onBlockAdded(
-                blockAddedContext(
-                    event.getBlock()::getHeader,
-                    event.getBlock()::getBody,
-                    event::getTransactionReceipts)));
+                blockAddedContext(event.getBlock(), event.getTransactionReceipts())));
   }
 
   @Override
@@ -98,10 +93,7 @@ public class BesuEventsImpl implements BesuEvents {
     return blockchain.observeChainReorg(
         (blockWithReceipts, chain) ->
             listener.onBlockReorg(
-                blockAddedContext(
-                    blockWithReceipts::getHeader,
-                    blockWithReceipts.getBlock()::getBody,
-                    blockWithReceipts::getReceipts)));
+                blockAddedContext(blockWithReceipts.getBlock(), blockWithReceipts.getReceipts())));
   }
 
   @Override
@@ -147,9 +139,7 @@ public class BesuEventsImpl implements BesuEvents {
       final List<List<Bytes32>> topics,
       final LogListener logListener) {
     final List<List<LogTopic>> besuTopics =
-        topics.stream()
-            .map(subList -> subList.stream().map(LogTopic::wrap).collect(toUnmodifiableList()))
-            .collect(toUnmodifiableList());
+        topics.stream().map(subList -> subList.stream().map(LogTopic::wrap).toList()).toList();
 
     final LogsQuery logsQuery = new LogsQuery(addresses, besuTopics);
 
@@ -167,45 +157,51 @@ public class BesuEventsImpl implements BesuEvents {
   }
 
   private static PropagatedBlockContext blockPropagatedContext(
-      final Supplier<BlockHeader> blockHeaderSupplier,
-      final Supplier<BlockBody> blockBodySupplier,
-      final Supplier<Difficulty> totalDifficultySupplier) {
+      final Block block, final Difficulty totalDifficulty) {
     return new PropagatedBlockContext() {
       @Override
-      public BlockHeader getBlockHeader() {
-        return blockHeaderSupplier.get();
+      public BlockHeader getHeader() {
+        return block.getHeader();
       }
 
       @Override
-      public BlockBody getBlockBody() {
-        return blockBodySupplier.get();
+      public BlockBody getBody() {
+        return block.getBody();
+      }
+
+      @Override
+      public Bytes toRlp() {
+        return block.toRlp();
       }
 
       @Override
       public UInt256 getTotalDifficulty() {
-        return totalDifficultySupplier.get().toUInt256();
+        return totalDifficulty.toUInt256();
       }
     };
   }
 
   private static AddedBlockContext blockAddedContext(
-      final Supplier<BlockHeader> blockHeaderSupplier,
-      final Supplier<BlockBody> blockBodySupplier,
-      final Supplier<List<TransactionReceipt>> transactionReceiptsSupplier) {
+      final Block block, final List<TransactionReceipt> transactionReceipts) {
     return new AddedBlockContext() {
       @Override
-      public BlockHeader getBlockHeader() {
-        return blockHeaderSupplier.get();
+      public BlockHeader getHeader() {
+        return block.getHeader();
       }
 
       @Override
-      public BlockBody getBlockBody() {
-        return blockBodySupplier.get();
+      public BlockBody getBody() {
+        return block.getBody();
+      }
+
+      @Override
+      public Bytes toRlp() {
+        return block.toRlp();
       }
 
       @Override
       public List<TransactionReceipt> getTransactionReceipts() {
-        return transactionReceiptsSupplier.get();
+        return transactionReceipts;
       }
     };
   }

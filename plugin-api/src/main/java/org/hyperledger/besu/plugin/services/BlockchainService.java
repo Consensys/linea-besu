@@ -17,7 +17,7 @@ package org.hyperledger.besu.plugin.services;
 import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.datatypes.Wei;
 import org.hyperledger.besu.plugin.Unstable;
-import org.hyperledger.besu.plugin.data.BlockContext;
+import org.hyperledger.besu.plugin.data.Block;
 import org.hyperledger.besu.plugin.data.BlockHeader;
 
 import java.util.Optional;
@@ -31,7 +31,7 @@ public interface BlockchainService extends BesuService {
    * @param number the block number
    * @return the BlockContext
    */
-  Optional<BlockContext> getBlockByNumber(final long number);
+  Optional<? extends Block> getBlockByNumber(final long number);
 
   /**
    * Get the hash of the chain head
