@@ -131,6 +131,7 @@ allprojects {
   targetCompatibility = 17
 
   repositories {
+    mavenLocal()
     maven {
       url 'https://hyperledger.jfrog.io/hyperledger/besu-maven'
       content { includeGroupByRegex('org\\.hyperledger\\..*') }
