@@ -83,6 +83,8 @@ startScripts {
   }
 }
 
+// no evmtool docker image needed on this fork
+
 graalvmNative {
   binaries {
     main {
