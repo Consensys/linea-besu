@@ -151,7 +151,7 @@ public class BlockMiner<M extends AbstractBlockCreator> implements Runnable {
         block.getBody().getTransactions().size());
 
     if (!shouldImportBlock(block)) {
-      return false;
+      return simulating || false;
     }
 
     final BlockImporter importer =
@@ -166,7 +166,7 @@ public class BlockMiner<M extends AbstractBlockCreator> implements Runnable {
     } else {
       LOG.error("Illegal block mined, could not be imported to local chain.");
     }
-    return blockImportResult.isImported();
+    return simulating || blockImportResult.isImported();
   }
 
   private void logProducedBlock(final Block block, final BlockCreationTiming blockCreationTiming) {
@@ -189,7 +189,9 @@ public class BlockMiner<M extends AbstractBlockCreator> implements Runnable {
   }
 
   public void cancel() {
-    minerBlockCreator.cancel();
+    if(!simulating) {
+      minerBlockCreator.cancel();
+    }
   }
 
   private void notifyNewBlockListeners(final Block block) {
