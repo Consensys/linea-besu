@@ -57,7 +57,7 @@ public class BlockMiner<M extends AbstractBlockCreator> implements Runnable {
   private final ProtocolSchedule protocolSchedule;
   private final Subscribers<MinedBlockObserver> observers;
   private final AbstractBlockScheduler scheduler;
-  private final boolean simulating = true;
+  private final boolean simulating;
 
   public BlockMiner(
       final Function<BlockHeader, M> blockCreatorFactory,
@@ -73,6 +73,7 @@ public class BlockMiner<M extends AbstractBlockCreator> implements Runnable {
     this.observers = observers;
     this.scheduler = scheduler;
     this.parentHeader = parentHeader;
+    this.simulating = true;
   }
 
   @Override
@@ -150,7 +151,7 @@ public class BlockMiner<M extends AbstractBlockCreator> implements Runnable {
         block.getBody().getTransactions().size());
 
     if (!shouldImportBlock(block)) {
-      return false;
+      return simulating || false;
     }
 
     final BlockImporter importer =
