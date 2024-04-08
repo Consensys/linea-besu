@@ -15,6 +15,7 @@
 package org.hyperledger.besu.ethereum.blockcreation;
 
 import org.hyperledger.besu.ethereum.ProtocolContext;
+import org.hyperledger.besu.ethereum.blockcreation.AbstractBlockScheduler.BlockCreationTimeResult;
 import org.hyperledger.besu.ethereum.blockcreation.BlockCreator.BlockCreationResult;
 import org.hyperledger.besu.ethereum.chain.MinedBlockObserver;
 import org.hyperledger.besu.ethereum.core.Block;
@@ -26,6 +27,7 @@ import org.hyperledger.besu.ethereum.mainnet.HeaderValidationMode;
 import org.hyperledger.besu.ethereum.mainnet.ProtocolSchedule;
 import org.hyperledger.besu.util.Subscribers;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CancellationException;
@@ -137,10 +139,15 @@ public class BlockMiner<M extends AbstractBlockCreator> implements Runnable {
 
     LOG.trace("Started a mining operation.");
 
-    final long newBlockTimestamp = scheduler.waitUntilNextBlockCanBeMined(parentHeader);
-    timing.register("protocolWait");
+    final var blockCreationTimeResult = scheduler.waitUntilNextBlockCanBeMined(parentHeader);
+    final long newBlockTimestamp = blockCreationTimeResult.timestampForHeader();
+    timing.register("timestampWait");
 
-    LOG.trace("Mining a new block with timestamp {}", newBlockTimestamp);
+    LOG.atTrace()
+        .setMessage("Mining a new block with timestamp {}={}")
+        .addArgument(newBlockTimestamp)
+        .addArgument(Instant.ofEpochSecond(newBlockTimestamp))
+        .log();
 
     final var blockCreationResult = minerBlockCreator.createBlock(newBlockTimestamp);
     timing.registerAll(blockCreationResult.getBlockCreationTimings());
@@ -153,6 +160,9 @@ public class BlockMiner<M extends AbstractBlockCreator> implements Runnable {
     if (!shouldImportBlock(block)) {
       return simulating || false;
     }
+
+    waitUntilBlockCanBeTransmitted(blockCreationTimeResult);
+    timing.register("waitForTransmission");
 
     final BlockImporter importer =
         protocolSchedule.getByBlockHeader(block.getHeader()).getBlockImporter();
@@ -167,6 +177,16 @@ public class BlockMiner<M extends AbstractBlockCreator> implements Runnable {
       LOG.error("Illegal block mined, could not be imported to local chain.");
     }
     return simulating || blockImportResult.isImported();
+  }
+
+  private void waitUntilBlockCanBeTransmitted(final BlockCreationTimeResult blockCreationTimeResult)
+      throws InterruptedException {
+    final long delay =
+        blockCreationTimeResult.earliestBlockTransmissionMillis() - System.currentTimeMillis();
+    LOG.trace("Wait until block transmission is {}ms", delay);
+    if (delay > 0) {
+      Thread.sleep(delay);
+    }
   }
 
   private void logProducedBlock(final Block block, final BlockCreationTiming blockCreationTiming) {
@@ -189,7 +209,7 @@ public class BlockMiner<M extends AbstractBlockCreator> implements Runnable {
   }
 
   public void cancel() {
-    if(!simulating) {
+    if (!simulating) {
       minerBlockCreator.cancel();
     }
   }

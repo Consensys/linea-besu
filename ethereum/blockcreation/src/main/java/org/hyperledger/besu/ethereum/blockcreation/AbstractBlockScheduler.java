@@ -17,8 +17,14 @@ package org.hyperledger.besu.ethereum.blockcreation;
 import org.hyperledger.besu.ethereum.core.BlockHeader;
 
 import java.time.Clock;
+import java.time.Instant;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class AbstractBlockScheduler {
+  private static final Logger LOG = LoggerFactory.getLogger(AbstractBlockScheduler.class);
+  private static final long DEFAULT_EARLY_START_MS = 500;
 
   protected final Clock clock;
 
@@ -26,16 +32,40 @@ public abstract class AbstractBlockScheduler {
     this.clock = clock;
   }
 
-  public long waitUntilNextBlockCanBeMined(final BlockHeader parentHeader)
+  public BlockCreationTimeResult waitUntilNextBlockCanBeMined(final BlockHeader parentHeader)
       throws InterruptedException {
     final BlockCreationTimeResult result = getNextTimestamp(parentHeader);
 
-    Thread.sleep(result.millisecondsUntilValid);
+    LOG.trace("{}", result);
 
-    return result.timestampForHeader;
+    final long delay = (result.timestampForHeader() * 1000) - System.currentTimeMillis();
+    LOG.trace("Start creation delay {}", delay);
+    if (delay > DEFAULT_EARLY_START_MS) {
+      Thread.sleep(delay - DEFAULT_EARLY_START_MS);
+      LOG.trace("Start creation slept {}", delay - DEFAULT_EARLY_START_MS);
+    }
+
+    return result;
   }
 
   public abstract BlockCreationTimeResult getNextTimestamp(final BlockHeader parentHeader);
 
-  public record BlockCreationTimeResult(long timestampForHeader, long millisecondsUntilValid) {}
+  public record BlockCreationTimeResult(
+      long timestampForHeader, long earliestBlockTransmissionMillis) {
+    @Override
+    public String toString() {
+      return "BlockCreationTimeResult{"
+          + "timestampForHeader="
+          + timestampForHeader
+          + "("
+          + Instant.ofEpochSecond(timestampForHeader)
+          + ")"
+          + ", earliestBlockTransmissionMillis="
+          + earliestBlockTransmissionMillis
+          + "("
+          + Instant.ofEpochMilli(earliestBlockTransmissionMillis)
+          + ")"
+          + '}';
+    }
+  }
 }

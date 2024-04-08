@@ -26,10 +26,12 @@ import java.util.Collection;
 import java.util.Random;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** The Clique block scheduler. */
 public class CliqueBlockScheduler extends DefaultBlockScheduler {
-
+  private static final Logger LOG = LoggerFactory.getLogger(CliqueBlockScheduler.class);
   private final int OUT_OF_TURN_DELAY_MULTIPLIER_MILLIS = 500;
 
   private final ValidatorProvider validatorProvider;
@@ -67,11 +69,11 @@ public class CliqueBlockScheduler extends DefaultBlockScheduler {
   public BlockCreationTimeResult getNextTimestamp(final BlockHeader parentHeader) {
     final BlockCreationTimeResult result = super.getNextTimestamp(parentHeader);
 
-    final long milliSecondsUntilNextBlock =
-        result.millisecondsUntilValid() + calculateTurnBasedDelay(parentHeader);
+    final long earliestBlockTransmissionMillis =
+        result.earliestBlockTransmissionMillis() + calculateTurnBasedDelay(parentHeader);
 
     return new BlockCreationTimeResult(
-        result.timestampForHeader(), Math.max(0, milliSecondsUntilNextBlock));
+        result.timestampForHeader(), earliestBlockTransmissionMillis);
   }
 
   private int calculateTurnBasedDelay(final BlockHeader parentHeader) {
@@ -79,6 +81,7 @@ public class CliqueBlockScheduler extends DefaultBlockScheduler {
     final Address nextProposer = proposerSelector.selectProposerForNextBlock(parentHeader);
 
     if (nextProposer.equals(localNodeAddress)) {
+      LOG.trace("Local node is proposer, returning 0 delay");
       return 0;
     }
     return calculatorOutOfTurnDelay(validatorProvider.getValidatorsAfterBlock(parentHeader));
@@ -88,6 +91,13 @@ public class CliqueBlockScheduler extends DefaultBlockScheduler {
     final int countSigners = validators.size();
     final double multiplier = (countSigners / 2d) + 1;
     final int maxDelay = (int) (multiplier * OUT_OF_TURN_DELAY_MULTIPLIER_MILLIS);
-    return r.nextInt(maxDelay) + 1;
+    final int randomDelay = r.nextInt(maxDelay) + 1;
+    LOG.trace(
+        "Out of tun proposer, returning {} delay, countSigners {}, multiplier {}, maxDelay {}",
+        randomDelay,
+        countSigners,
+        multiplier,
+        maxDelay);
+    return randomDelay;
   }
 }
