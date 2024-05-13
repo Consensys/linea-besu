@@ -20,6 +20,8 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import org.hyperledger.besu.datatypes.rpc.JsonRpcResponse;
+import org.hyperledger.besu.datatypes.rpc.JsonRpcResponseType;
 
 @JsonPropertyOrder({"jsonrpc", "id", "error"})
 public class JsonRpcUnauthorizedResponse implements JsonRpcResponse {

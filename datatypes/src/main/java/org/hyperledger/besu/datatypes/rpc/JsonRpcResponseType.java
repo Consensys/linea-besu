@@ -12,7 +12,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-package org.hyperledger.besu.ethereum.api.jsonrpc.internal.response;
+package org.hyperledger.besu.datatypes.rpc;
 
 /** Various types of responses that the JSON-RPC component may produce. */
 public enum JsonRpcResponseType {

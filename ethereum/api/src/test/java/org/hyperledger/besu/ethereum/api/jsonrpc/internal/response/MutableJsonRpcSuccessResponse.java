@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonSetter;
+import org.hyperledger.besu.datatypes.rpc.JsonRpcResponseType;
 
 @JsonPropertyOrder({"jsonrpc", "id", "result"})
 public class MutableJsonRpcSuccessResponse {

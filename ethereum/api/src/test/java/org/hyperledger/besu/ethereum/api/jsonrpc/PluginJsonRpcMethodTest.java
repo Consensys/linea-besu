@@ -22,7 +22,7 @@ import org.hyperledger.besu.ethereum.api.jsonrpc.internal.response.JsonRpcError;
 import org.hyperledger.besu.ethereum.api.jsonrpc.internal.response.RpcErrorType;
 import org.hyperledger.besu.plugin.services.exception.PluginRpcEndpointException;
 import org.hyperledger.besu.plugin.services.rpc.PluginRpcRequest;
-import org.hyperledger.besu.plugin.services.rpc.RpcMethodError;
+import org.hyperledger.besu.datatypes.rpc.RpcMethodError;
 
 import java.util.Locale;
 import java.util.Optional;
