@@ -15,6 +15,7 @@
 package org.hyperledger.besu.plugin.services;
 
 import org.hyperledger.besu.plugin.services.rpc.PluginRpcRequest;
+import org.hyperledger.besu.plugin.services.rpc.PluginRpcResponse;
 
 import java.util.function.Function;
 
@@ -54,4 +55,6 @@ public interface RpcEndpointService extends BesuService {
    */
   <T> void registerRPCEndpoint(
       String namespace, String functionName, Function<PluginRpcRequest, T> function);
+
+  PluginRpcResponse call(String methodName, Object[] params);
 }

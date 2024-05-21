@@ -12,19 +12,25 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-package org.hyperledger.besu.ethereum.api.jsonrpc.execution;
+package org.hyperledger.besu.ethereum.api.jsonrpc;
 
-import org.hyperledger.besu.datatypes.rpc.JsonRpcResponse;
-import org.hyperledger.besu.ethereum.api.jsonrpc.internal.JsonRpcRequestContext;
-import org.hyperledger.besu.ethereum.api.jsonrpc.internal.JsonRpcRequestId;
-import org.hyperledger.besu.ethereum.api.jsonrpc.internal.methods.JsonRpcMethod;
+import java.util.HashSet;
+import java.util.Set;
 
-import io.opentelemetry.api.trace.Span;
+import org.immutables.value.Value;
 
-public interface JsonRpcProcessor {
-  JsonRpcResponse process(
-      final JsonRpcRequestId id,
-      final JsonRpcMethod method,
-      final Span metricSpan,
-      final JsonRpcRequestContext request);
+@Value.Immutable
+public interface InProcessRpcConfiguration {
+  boolean DEFAULT_IN_PROCESS_RPC_ENABLED = false;
+  Set<String> DEFAULT_IN_PROCESS_RPC_APIS = new HashSet<>(RpcApis.DEFAULT_RPC_APIS);
+
+  @Value.Default
+  default boolean isEnabled() {
+    return DEFAULT_IN_PROCESS_RPC_ENABLED;
+  }
+
+  @Value.Default
+  default Set<String> getInProcessRpcApis() {
+    return DEFAULT_IN_PROCESS_RPC_APIS;
+  }
 }
