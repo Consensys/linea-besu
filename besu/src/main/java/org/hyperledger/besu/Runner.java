@@ -418,6 +418,11 @@ public class Runner implements AutoCloseable {
     }
   }
 
+  /**
+   * Get the RPC methods that can be called in-process
+   *
+   * @return RPC methods by name
+   */
   public Map<String, JsonRpcMethod> getInProcessRpcMethods() {
     return inProcessRpcMethods;
   }

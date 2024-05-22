@@ -16,12 +16,23 @@ package org.hyperledger.besu.datatypes.rpc;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
 
+/** Represent a Json RPC response */
 public interface JsonRpcResponse {
 
+  /**
+   * The JsonRPC version
+   *
+   * @return the version
+   */
   @JsonGetter("jsonrpc")
   default String getVersion() {
     return "2.0";
   }
 
+  /**
+   * Get the response type
+   *
+   * @return the response type
+   */
   JsonRpcResponseType getType();
 }

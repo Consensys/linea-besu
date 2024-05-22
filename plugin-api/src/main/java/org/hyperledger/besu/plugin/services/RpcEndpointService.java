@@ -56,5 +56,12 @@ public interface RpcEndpointService extends BesuService {
   <T> void registerRPCEndpoint(
       String namespace, String functionName, Function<PluginRpcRequest, T> function);
 
+  /**
+   * Allow to call any of the enabled in-process RPC methods
+   *
+   * @param methodName the method to invoke
+   * @param params the list of parameters accepted by the method
+   * @return the result of the method
+   */
   PluginRpcResponse call(String methodName, Object[] params);
 }

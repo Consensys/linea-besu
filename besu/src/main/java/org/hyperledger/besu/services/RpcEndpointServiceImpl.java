@@ -44,6 +44,11 @@ public class RpcEndpointServiceImpl implements RpcEndpointService {
   /** Default Constructor. */
   public RpcEndpointServiceImpl() {}
 
+  /**
+   * Init the service
+   *
+   * @param inProcessRpcMethods set of RPC methods that can be called
+   */
   public void init(final Map<String, JsonRpcMethod> inProcessRpcMethods) {
     this.inProgressRpcMethods = inProcessRpcMethods;
   }

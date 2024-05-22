@@ -19,5 +19,11 @@ import org.hyperledger.besu.datatypes.rpc.JsonRpcResponse;
 /** The interface Plugin rpc response. */
 public interface PluginRpcResponse extends JsonRpcResponse {
 
+  /**
+   * Get the result, unfortunately there is no typing yet, so call must know how to interact with
+   * the response
+   *
+   * @return the result
+   */
   Object getResult();
 }

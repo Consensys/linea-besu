@@ -16,8 +16,12 @@ package org.hyperledger.besu.datatypes.rpc;
 
 /** Various types of responses that the JSON-RPC component may produce. */
 public enum JsonRpcResponseType {
+  /** no response */
   NONE,
+  /** Successful response */
   SUCCESS,
+  /** Error response */
   ERROR,
+  /** Not authorized response */
   UNAUTHORIZED
 }
