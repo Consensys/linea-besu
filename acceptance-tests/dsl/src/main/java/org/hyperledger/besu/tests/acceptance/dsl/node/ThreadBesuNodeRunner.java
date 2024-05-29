@@ -29,7 +29,6 @@ import org.hyperledger.besu.cryptoservices.NodeKey;
 import org.hyperledger.besu.ethereum.GasLimitCalculator;
 import org.hyperledger.besu.ethereum.api.ApiConfiguration;
 import org.hyperledger.besu.ethereum.api.graphql.GraphQLConfiguration;
-import org.hyperledger.besu.ethereum.api.jsonrpc.ImmutableInProcessRpcConfiguration;
 import org.hyperledger.besu.ethereum.api.jsonrpc.InProcessRpcConfiguration;
 import org.hyperledger.besu.ethereum.core.ImmutableMiningParameters;
 import org.hyperledger.besu.ethereum.core.plugins.PluginConfiguration;
@@ -242,8 +241,7 @@ public class ThreadBesuNodeRunner implements BesuNodeRunner {
             .transactionPoolValidatorService(transactionPoolValidatorServiceImpl)
             .build();
 
-    final InProcessRpcConfiguration inProcessRpcConfiguration =
-        ImmutableInProcessRpcConfiguration.builder().isEnabled(true).build();
+    final InProcessRpcConfiguration inProcessRpcConfiguration = node.inProcessRpcConfiguration();
 
     final int maxPeers = 25;
 
@@ -321,6 +319,8 @@ public class ThreadBesuNodeRunner implements BesuNodeRunner {
         besuController.getTransactionPool(),
         besuController.getSyncState(),
         besuController.getProtocolContext().getBadBlockManager());
+
+    rpcEndpointServiceImpl.init(runner.getInProcessRpcMethods());
 
     besuPluginContext.startPlugins();
 
