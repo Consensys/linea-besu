@@ -27,11 +27,11 @@ import org.hyperledger.besu.crypto.SignatureAlgorithm;
 import org.hyperledger.besu.crypto.SignatureAlgorithmFactory;
 import org.hyperledger.besu.datatypes.Address;
 import org.hyperledger.besu.datatypes.Hash;
+import org.hyperledger.besu.datatypes.rpc.JsonRpcResponse;
 import org.hyperledger.besu.ethereum.ProtocolContext;
 import org.hyperledger.besu.ethereum.api.jsonrpc.internal.JsonRpcRequest;
 import org.hyperledger.besu.ethereum.api.jsonrpc.internal.JsonRpcRequestContext;
 import org.hyperledger.besu.ethereum.api.jsonrpc.internal.response.JsonRpcErrorResponse;
-import org.hyperledger.besu.ethereum.api.jsonrpc.internal.response.JsonRpcResponse;
 import org.hyperledger.besu.ethereum.api.jsonrpc.internal.results.BlockResultFactory;
 import org.hyperledger.besu.ethereum.core.Block;
 import org.hyperledger.besu.ethereum.core.BlockBody;
@@ -105,7 +105,7 @@ public abstract class AbstractEngineGetPayloadTest extends AbstractScheduledApiT
               Collections.emptyList(),
               Optional.of(Collections.emptyList()),
               Optional.empty()));
-  private static final Block mockBlockWithDeposits =
+  private static final Block mockBlockWithDepositRequests =
       new Block(
           mockHeader,
           new BlockBody(
@@ -116,8 +116,8 @@ public abstract class AbstractEngineGetPayloadTest extends AbstractScheduledApiT
   protected static final BlockWithReceipts mockBlockWithReceiptsAndWithdrawals =
       new BlockWithReceipts(mockBlockWithWithdrawals, Collections.emptyList());
 
-  protected static final BlockWithReceipts mockBlockWithReceiptsAndDeposits =
-      new BlockWithReceipts(mockBlockWithDeposits, Collections.emptyList());
+  protected static final BlockWithReceipts mockBlockWithReceiptsAndDepositRequests =
+      new BlockWithReceipts(mockBlockWithDepositRequests, Collections.emptyList());
 
   @Mock protected ProtocolContext protocolContext;
 

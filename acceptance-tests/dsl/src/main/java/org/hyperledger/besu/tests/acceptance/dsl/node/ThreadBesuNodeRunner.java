@@ -29,6 +29,7 @@ import org.hyperledger.besu.cryptoservices.NodeKey;
 import org.hyperledger.besu.ethereum.GasLimitCalculator;
 import org.hyperledger.besu.ethereum.api.ApiConfiguration;
 import org.hyperledger.besu.ethereum.api.graphql.GraphQLConfiguration;
+import org.hyperledger.besu.ethereum.api.jsonrpc.InProcessRpcConfiguration;
 import org.hyperledger.besu.ethereum.core.ImmutableMiningParameters;
 import org.hyperledger.besu.ethereum.core.plugins.PluginConfiguration;
 import org.hyperledger.besu.ethereum.eth.EthProtocolConfiguration;
@@ -105,6 +106,7 @@ public class ThreadBesuNodeRunner implements BesuNodeRunner {
       final TransactionPoolValidatorServiceImpl transactionPoolValidatorServiceImpl,
       final BlockchainServiceImpl blockchainServiceImpl,
       final RpcEndpointServiceImpl rpcEndpointServiceImpl,
+      final BesuEventsImpl besuEventsImpl,
       final BesuConfiguration commonPluginConfiguration,
       final PermissioningServiceImpl permissioningService) {
     final CommandLine commandLine = new CommandLine(CommandSpec.create());
@@ -121,6 +123,7 @@ public class ThreadBesuNodeRunner implements BesuNodeRunner {
         TransactionSimulationService.class, transactionSimulationServiceImpl);
     besuPluginContext.addService(BlockchainService.class, blockchainServiceImpl);
     besuPluginContext.addService(BesuConfiguration.class, commonPluginConfiguration);
+    besuPluginContext.addService(BesuEvents.class, besuEventsImpl);
 
     final Path pluginsPath;
     final String pluginDir = System.getProperty("besu.plugins.dir");
@@ -174,17 +177,17 @@ public class ThreadBesuNodeRunner implements BesuNodeRunner {
     final Path dataDir = node.homeDirectory();
     final BesuConfigurationImpl commonPluginConfiguration = new BesuConfigurationImpl();
     final PermissioningServiceImpl permissioningService = new PermissioningServiceImpl();
+    final BesuEventsImpl besuEventsImpl = new BesuEventsImpl();
 
     final var miningParameters =
         ImmutableMiningParameters.builder()
             .from(node.getMiningParameters())
             .transactionSelectionService(transactionSelectionServiceImpl)
             .build();
-    commonPluginConfiguration.init(
-        dataDir,
-        dataDir.resolve(DATABASE_PATH),
-        node.getDataStorageConfiguration(),
-        miningParameters);
+    commonPluginConfiguration
+        .init(dataDir, dataDir.resolve(DATABASE_PATH), node.getDataStorageConfiguration())
+        .withMiningParameters(miningParameters);
+
     final BesuPluginContextImpl besuPluginContext =
         besuPluginContextMap.computeIfAbsent(
             node,
@@ -198,6 +201,7 @@ public class ThreadBesuNodeRunner implements BesuNodeRunner {
                     transactionPoolValidatorServiceImpl,
                     blockchainServiceImpl,
                     rpcEndpointServiceImpl,
+                    besuEventsImpl,
                     commonPluginConfiguration,
                     permissioningService));
 
@@ -236,6 +240,8 @@ public class ThreadBesuNodeRunner implements BesuNodeRunner {
             .strictTransactionReplayProtectionEnabled(node.isStrictTxReplayProtectionEnabled())
             .transactionPoolValidatorService(transactionPoolValidatorServiceImpl)
             .build();
+
+    final InProcessRpcConfiguration inProcessRpcConfiguration = node.inProcessRpcConfiguration();
 
     final int maxPeers = 25;
 
@@ -298,7 +304,8 @@ public class ThreadBesuNodeRunner implements BesuNodeRunner {
         .besuPluginContext(besuPluginContext)
         .autoLogBloomCaching(false)
         .storageProvider(storageProvider)
-        .rpcEndpointService(rpcEndpointServiceImpl);
+        .rpcEndpointService(rpcEndpointServiceImpl)
+        .inProcessRpcConfiguration(inProcessRpcConfiguration);
     node.engineRpcConfiguration().ifPresent(runnerBuilder::engineJsonRpcConfiguration);
 
     besuPluginContext.beforeExternalServices();
@@ -306,14 +313,15 @@ public class ThreadBesuNodeRunner implements BesuNodeRunner {
 
     runner.startExternalServices();
 
-    besuPluginContext.addService(
-        BesuEvents.class,
-        new BesuEventsImpl(
-            besuController.getProtocolContext().getBlockchain(),
-            besuController.getProtocolManager().getBlockBroadcaster(),
-            besuController.getTransactionPool(),
-            besuController.getSyncState(),
-            besuController.getProtocolContext().getBadBlockManager()));
+    besuEventsImpl.init(
+        besuController.getProtocolContext().getBlockchain(),
+        besuController.getProtocolManager().getBlockBroadcaster(),
+        besuController.getTransactionPool(),
+        besuController.getSyncState(),
+        besuController.getProtocolContext().getBadBlockManager());
+
+    rpcEndpointServiceImpl.init(runner.getInProcessRpcMethods());
+
     besuPluginContext.startPlugins();
 
     runner.startEthereumMainLoop();

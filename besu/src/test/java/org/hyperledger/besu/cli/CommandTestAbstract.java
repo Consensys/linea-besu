@@ -83,6 +83,7 @@ import org.hyperledger.besu.plugin.services.storage.KeyValueStorageFactory;
 import org.hyperledger.besu.plugin.services.storage.PrivacyKeyValueStorageFactory;
 import org.hyperledger.besu.plugin.services.storage.SegmentIdentifier;
 import org.hyperledger.besu.services.BesuConfigurationImpl;
+import org.hyperledger.besu.services.BesuEventsImpl;
 import org.hyperledger.besu.services.BesuPluginContextImpl;
 import org.hyperledger.besu.services.BlockchainServiceImpl;
 import org.hyperledger.besu.services.PermissioningServiceImpl;
@@ -127,6 +128,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -214,7 +216,7 @@ public abstract class CommandTestAbstract {
   @Mock protected TransactionSelectionServiceImpl txSelectionService;
   @Mock protected SecurityModuleServiceImpl securityModuleService;
   @Mock protected SecurityModule securityModule;
-  @Mock protected BesuConfigurationImpl commonPluginConfiguration;
+  @Spy protected BesuConfigurationImpl commonPluginConfiguration = new BesuConfigurationImpl();
   @Mock protected KeyValueStorageFactory rocksDBStorageFactory;
   @Mock protected PrivacyKeyValueStorageFactory rocksDBSPrivacyStorageFactory;
   @Mock protected PicoCLIOptions cliOptions;
@@ -336,6 +338,7 @@ public abstract class CommandTestAbstract {
     when(mockRunnerBuilder.graphQLConfiguration(any())).thenReturn(mockRunnerBuilder);
     when(mockRunnerBuilder.webSocketConfiguration(any())).thenReturn(mockRunnerBuilder);
     when(mockRunnerBuilder.jsonRpcIpcConfiguration(any())).thenReturn(mockRunnerBuilder);
+    when(mockRunnerBuilder.inProcessRpcConfiguration(any())).thenReturn(mockRunnerBuilder);
     when(mockRunnerBuilder.apiConfiguration(any())).thenReturn(mockRunnerBuilder);
     when(mockRunnerBuilder.dataDir(any())).thenReturn(mockRunnerBuilder);
     when(mockRunnerBuilder.bannedNodeIds(any())).thenReturn(mockRunnerBuilder);
@@ -574,7 +577,8 @@ public abstract class CommandTestAbstract {
           new TransactionSelectionServiceImpl(),
           new TransactionPoolValidatorServiceImpl(),
           new TransactionSimulationServiceImpl(),
-          new BlockchainServiceImpl());
+          new BlockchainServiceImpl(),
+          new BesuEventsImpl());
     }
 
     @Override

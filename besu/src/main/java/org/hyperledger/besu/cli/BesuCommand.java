@@ -63,6 +63,7 @@ import org.hyperledger.besu.cli.options.unstable.ChainPruningOptions;
 import org.hyperledger.besu.cli.options.unstable.DnsOptions;
 import org.hyperledger.besu.cli.options.unstable.EthProtocolOptions;
 import org.hyperledger.besu.cli.options.unstable.EvmOptions;
+import org.hyperledger.besu.cli.options.unstable.InProcessRpcOptions;
 import org.hyperledger.besu.cli.options.unstable.IpcOptions;
 import org.hyperledger.besu.cli.options.unstable.MetricsCLIOptions;
 import org.hyperledger.besu.cli.options.unstable.NatOptions;
@@ -110,6 +111,7 @@ import org.hyperledger.besu.enclave.EnclaveFactory;
 import org.hyperledger.besu.ethereum.GasLimitCalculator;
 import org.hyperledger.besu.ethereum.api.ApiConfiguration;
 import org.hyperledger.besu.ethereum.api.graphql.GraphQLConfiguration;
+import org.hyperledger.besu.ethereum.api.jsonrpc.InProcessRpcConfiguration;
 import org.hyperledger.besu.ethereum.api.jsonrpc.JsonRpcConfiguration;
 import org.hyperledger.besu.ethereum.api.jsonrpc.RpcApis;
 import org.hyperledger.besu.ethereum.api.jsonrpc.authentication.JwtAlgorithm;
@@ -172,21 +174,29 @@ import org.hyperledger.besu.plugin.services.TransactionSimulationService;
 import org.hyperledger.besu.plugin.services.exception.StorageException;
 import org.hyperledger.besu.plugin.services.metrics.MetricCategory;
 import org.hyperledger.besu.plugin.services.metrics.MetricCategoryRegistry;
+import org.hyperledger.besu.plugin.services.p2p.P2PService;
+import org.hyperledger.besu.plugin.services.rlp.RlpConverterService;
 import org.hyperledger.besu.plugin.services.securitymodule.SecurityModule;
 import org.hyperledger.besu.plugin.services.storage.DataStorageFormat;
 import org.hyperledger.besu.plugin.services.storage.PrivacyKeyValueStorageFactory;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.RocksDBPlugin;
+import org.hyperledger.besu.plugin.services.sync.SynchronizationService;
+import org.hyperledger.besu.plugin.services.transactionpool.TransactionPoolService;
 import org.hyperledger.besu.services.BesuConfigurationImpl;
 import org.hyperledger.besu.services.BesuEventsImpl;
 import org.hyperledger.besu.services.BesuPluginContextImpl;
 import org.hyperledger.besu.services.BlockchainServiceImpl;
+import org.hyperledger.besu.services.P2PServiceImpl;
 import org.hyperledger.besu.services.PermissioningServiceImpl;
 import org.hyperledger.besu.services.PicoCLIOptionsImpl;
 import org.hyperledger.besu.services.PrivacyPluginServiceImpl;
+import org.hyperledger.besu.services.RlpConverterServiceImpl;
 import org.hyperledger.besu.services.RpcEndpointServiceImpl;
 import org.hyperledger.besu.services.SecurityModuleServiceImpl;
 import org.hyperledger.besu.services.StorageServiceImpl;
+import org.hyperledger.besu.services.SynchronizationServiceImpl;
 import org.hyperledger.besu.services.TraceServiceImpl;
+import org.hyperledger.besu.services.TransactionPoolServiceImpl;
 import org.hyperledger.besu.services.TransactionPoolValidatorServiceImpl;
 import org.hyperledger.besu.services.TransactionSelectionServiceImpl;
 import org.hyperledger.besu.services.TransactionSimulationServiceImpl;
@@ -385,6 +395,7 @@ public class BesuCommand implements DefaultCommandValues, Runnable {
   private final TransactionPoolValidatorServiceImpl transactionValidatorServiceImpl;
   private final TransactionSimulationServiceImpl transactionSimulationServiceImpl;
   private final BlockchainServiceImpl blockchainServiceImpl;
+  private final BesuEventsImpl besuEventsImpl;
 
   static class P2PDiscoveryOptionGroup {
 
@@ -630,6 +641,10 @@ public class BesuCommand implements DefaultCommandValues, Runnable {
   // JSON-RPC Websocket Options
   @CommandLine.ArgGroup(validate = false, heading = "@|bold JSON-RPC Websocket Options|@%n")
   RpcWebsocketOptions rpcWebsocketOptions = new RpcWebsocketOptions();
+
+  // In-Process RPC Options
+  @CommandLine.ArgGroup(validate = false, heading = "@|bold In-Process RPC Options|@%n")
+  InProcessRpcOptions inProcessRpcOptions = InProcessRpcOptions.create();
 
   // Privacy Options Group
   @CommandLine.ArgGroup(validate = false, heading = "@|bold Privacy Options|@%n")
@@ -892,6 +907,7 @@ public class BesuCommand implements DefaultCommandValues, Runnable {
   private GraphQLConfiguration graphQLConfiguration;
   private WebSocketConfiguration webSocketConfiguration;
   private JsonRpcIpcConfiguration jsonRpcIpcConfiguration;
+  private InProcessRpcConfiguration inProcessRpcConfiguration;
   private ApiConfiguration apiConfiguration;
   private MetricsConfiguration metricsConfiguration;
   private Optional<PermissioningConfiguration> permissioningConfiguration;
@@ -951,7 +967,8 @@ public class BesuCommand implements DefaultCommandValues, Runnable {
         new TransactionSelectionServiceImpl(),
         new TransactionPoolValidatorServiceImpl(),
         new TransactionSimulationServiceImpl(),
-        new BlockchainServiceImpl());
+        new BlockchainServiceImpl(),
+        new BesuEventsImpl());
   }
 
   /**
@@ -975,6 +992,7 @@ public class BesuCommand implements DefaultCommandValues, Runnable {
    * @param transactionValidatorServiceImpl instance of TransactionValidatorServiceImpl
    * @param transactionSimulationServiceImpl instance of TransactionSimulationServiceImpl
    * @param blockchainServiceImpl instance of BlockchainServiceImpl
+   * @param besuEventsImpl instance of BesuEventsImpl
    */
   @VisibleForTesting
   protected BesuCommand(
@@ -995,7 +1013,8 @@ public class BesuCommand implements DefaultCommandValues, Runnable {
       final TransactionSelectionServiceImpl transactionSelectionServiceImpl,
       final TransactionPoolValidatorServiceImpl transactionValidatorServiceImpl,
       final TransactionSimulationServiceImpl transactionSimulationServiceImpl,
-      final BlockchainServiceImpl blockchainServiceImpl) {
+      final BlockchainServiceImpl blockchainServiceImpl,
+      final BesuEventsImpl besuEventsImpl) {
     this.besuComponent = besuComponent;
     this.logger = besuComponent.getBesuCommandLogger();
     this.rlpBlockImporter = rlpBlockImporter;
@@ -1017,6 +1036,7 @@ public class BesuCommand implements DefaultCommandValues, Runnable {
     this.transactionValidatorServiceImpl = transactionValidatorServiceImpl;
     this.transactionSimulationServiceImpl = transactionSimulationServiceImpl;
     this.blockchainServiceImpl = blockchainServiceImpl;
+    this.besuEventsImpl = besuEventsImpl;
   }
 
   /**
@@ -1161,12 +1181,15 @@ public class BesuCommand implements DefaultCommandValues, Runnable {
       final var runner = buildRunner();
       runner.startExternalServices();
 
-      startPlugins();
+      startPlugins(runner);
       validatePluginOptions();
       setReleaseMetrics();
       preSynchronization();
 
       runner.startEthereumMainLoop();
+
+      besuPluginContext.afterExternalServicesMainLoop();
+
       runner.awaitStop();
 
     } catch (final Exception e) {
@@ -1272,6 +1295,7 @@ public class BesuCommand implements DefaultCommandValues, Runnable {
     besuPluginContext.addService(
         TransactionSimulationService.class, transactionSimulationServiceImpl);
     besuPluginContext.addService(BlockchainService.class, blockchainServiceImpl);
+    besuPluginContext.addService(BesuEvents.class, besuEventsImpl);
 
     // register built-in plugins
     rocksDBPlugin = new RocksDBPlugin();
@@ -1320,6 +1344,7 @@ public class BesuCommand implements DefaultCommandValues, Runnable {
         engineJsonRpcConfiguration,
         webSocketConfiguration,
         jsonRpcIpcConfiguration,
+        inProcessRpcConfiguration,
         apiConfiguration,
         metricsConfiguration,
         permissioningConfiguration,
@@ -1327,7 +1352,7 @@ public class BesuCommand implements DefaultCommandValues, Runnable {
         pidPath);
   }
 
-  private void startPlugins() {
+  private void startPlugins(final Runner runner) {
     blockchainServiceImpl.init(
         besuController.getProtocolContext(), besuController.getProtocolSchedule());
     transactionSimulationServiceImpl.init(
@@ -1337,16 +1362,36 @@ public class BesuCommand implements DefaultCommandValues, Runnable {
             besuController.getProtocolContext().getWorldStateArchive(),
             besuController.getProtocolSchedule(),
             apiConfiguration.getGasCap()));
+    rpcEndpointServiceImpl.init(runner.getInProcessRpcMethods());
+
+    besuEventsImpl.init(
+        besuController.getProtocolContext().getBlockchain(),
+        besuController.getProtocolManager().getBlockBroadcaster(),
+        besuController.getTransactionPool(),
+        besuController.getSyncState(),
+        besuController.getProtocolContext().getBadBlockManager());
+
+    besuPluginContext.addService(MetricsSystem.class, getMetricsSystem());
+
+    besuPluginContext.addService(BlockchainService.class, blockchainServiceImpl);
 
     besuPluginContext.addService(
-        BesuEvents.class,
-        new BesuEventsImpl(
-            besuController.getProtocolContext().getBlockchain(),
-            besuController.getProtocolManager().getBlockBroadcaster(),
-            besuController.getTransactionPool(),
+        SynchronizationService.class,
+        new SynchronizationServiceImpl(
+            besuController.getProtocolContext(),
+            besuController.getProtocolSchedule(),
             besuController.getSyncState(),
-            besuController.getProtocolContext().getBadBlockManager()));
-    besuPluginContext.addService(MetricsSystem.class, getMetricsSystem());
+            besuController.getProtocolContext().getWorldStateArchive()));
+
+    besuPluginContext.addService(P2PService.class, new P2PServiceImpl(runner.getP2PNetwork()));
+
+    besuPluginContext.addService(
+        TransactionPoolService.class,
+        new TransactionPoolServiceImpl(besuController.getTransactionPool()));
+
+    besuPluginContext.addService(
+        RlpConverterService.class,
+        new RlpConverterServiceImpl(besuController.getProtocolSchedule()));
 
     besuPluginContext.addService(
         TraceService.class,
@@ -1653,11 +1698,11 @@ public class BesuCommand implements DefaultCommandValues, Runnable {
   private void validateChainDataPruningParams() {
     if (unstableChainPruningOptions.getChainDataPruningEnabled()
         && unstableChainPruningOptions.getChainDataPruningBlocksRetained()
-            < ChainPruningOptions.DEFAULT_CHAIN_DATA_PRUNING_MIN_BLOCKS_RETAINED) {
+            < unstableChainPruningOptions.getChainDataPruningBlocksRetainedLimit()) {
       throw new ParameterException(
           this.commandLine,
           "--Xchain-pruning-blocks-retained must be >= "
-              + ChainPruningOptions.DEFAULT_CHAIN_DATA_PRUNING_MIN_BLOCKS_RETAINED);
+              + unstableChainPruningOptions.getChainDataPruningBlocksRetainedLimit());
     }
   }
 
@@ -1758,6 +1803,7 @@ public class BesuCommand implements DefaultCommandValues, Runnable {
             unstableIpcOptions.isEnabled(),
             unstableIpcOptions.getIpcPath(),
             unstableIpcOptions.getRpcIpcApis());
+    inProcessRpcConfiguration = inProcessRpcOptions.toDomainObject();
     apiConfiguration = apiConfigurationOptions.apiConfiguration();
     dataStorageConfiguration = getDataStorageConfiguration();
     // hostsWhitelist is a hidden option. If it is specified, add the list to hostAllowlist
@@ -1843,11 +1889,10 @@ public class BesuCommand implements DefaultCommandValues, Runnable {
    * @return instance of BesuControllerBuilder
    */
   public BesuControllerBuilder getControllerBuilder() {
-    pluginCommonConfiguration.init(
-        dataDir(),
-        dataDir().resolve(DATABASE_PATH),
-        getDataStorageConfiguration(),
-        miningParametersSupplier.get());
+    pluginCommonConfiguration
+        .init(dataDir(), dataDir().resolve(DATABASE_PATH), getDataStorageConfiguration())
+        .withMiningParameters(getMiningParameters())
+        .withJsonRpcHttpOptions(jsonRpcHttpOptions);
     final KeyValueStorageProvider storageProvider = keyValueStorageProvider(keyValueStorageName);
     return controllerBuilderFactory
         .fromEthNetworkConfig(updateNetworkConfig(network), getDefaultSyncModeIfNotSet())
@@ -2242,6 +2287,7 @@ public class BesuCommand implements DefaultCommandValues, Runnable {
       final JsonRpcConfiguration engineJsonRpcConfiguration,
       final WebSocketConfiguration webSocketConfiguration,
       final JsonRpcIpcConfiguration jsonRpcIpcConfiguration,
+      final InProcessRpcConfiguration inProcessRpcConfiguration,
       final ApiConfiguration apiConfiguration,
       final MetricsConfiguration metricsConfiguration,
       final Optional<PermissioningConfiguration> permissioningConfiguration,
@@ -2274,6 +2320,7 @@ public class BesuCommand implements DefaultCommandValues, Runnable {
             .engineJsonRpcConfiguration(engineJsonRpcConfiguration)
             .webSocketConfiguration(webSocketConfiguration)
             .jsonRpcIpcConfiguration(jsonRpcIpcConfiguration)
+            .inProcessRpcConfiguration(inProcessRpcConfiguration)
             .apiConfiguration(apiConfiguration)
             .pidPath(pidPath)
             .dataDir(dataDir())
