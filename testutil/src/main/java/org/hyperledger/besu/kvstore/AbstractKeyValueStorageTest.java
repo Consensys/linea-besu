@@ -405,7 +405,7 @@ public abstract class AbstractKeyValueStorageTest {
         .isInstanceOf(IllegalStateException.class);
   }
 
-  /** Transaction remove after rollback. */
+  /** Transaction removed after rollback. */
   @Test
   public void transactionRemoveAfterRollback() {
     Assertions.assertThatThrownBy(
