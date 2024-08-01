@@ -20,11 +20,11 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
-import org.hyperledger.besu.datatypes.rpc.JsonRpcResponse;
 import org.hyperledger.besu.ethereum.api.jsonrpc.internal.JsonRpcRequest;
 import org.hyperledger.besu.ethereum.api.jsonrpc.internal.JsonRpcRequestContext;
 import org.hyperledger.besu.ethereum.api.jsonrpc.internal.exception.InvalidJsonRpcParameters;
 import org.hyperledger.besu.ethereum.api.jsonrpc.internal.response.JsonRpcErrorResponse;
+import org.hyperledger.besu.ethereum.api.jsonrpc.internal.response.JsonRpcResponse;
 import org.hyperledger.besu.ethereum.api.jsonrpc.internal.response.JsonRpcSuccessResponse;
 import org.hyperledger.besu.ethereum.api.jsonrpc.internal.response.RpcErrorType;
 import org.hyperledger.besu.ethereum.permissioning.AccountLocalConfigPermissioningController;
@@ -125,9 +125,8 @@ public class PermRemoveAccountsFromAllowlistTest {
 
     final Throwable thrown = catchThrowable(() -> method.response(request));
     assertThat(thrown)
-        .hasNoCause()
         .isInstanceOf(InvalidJsonRpcParameters.class)
-        .hasMessage("Missing required json rpc parameter at index 0");
+        .hasMessage("Invalid accounts list parameter");
   }
 
   private JsonRpcRequestContext request(final List<String> accounts) {

@@ -12,7 +12,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-package org.hyperledger.besu.datatypes.rpc;
+package org.hyperledger.besu.plugin.services.rpc;
 
 import java.util.Optional;
 
@@ -22,6 +22,9 @@ import java.util.Optional;
  * decoder function.
  */
 public interface RpcMethodError {
+
+  /** The error code for all invalid params */
+  static final int INVALID_PARAMS_ERROR_CODE = -32602;
 
   /**
    * Retrieves the error code associated with the RPC error.

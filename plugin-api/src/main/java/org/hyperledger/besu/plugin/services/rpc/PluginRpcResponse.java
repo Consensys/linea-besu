@@ -1,5 +1,5 @@
 /*
- * Copyright ConsenSys AG.
+ * Copyright contributors to Hyperledger Besu.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -14,10 +14,8 @@
  */
 package org.hyperledger.besu.plugin.services.rpc;
 
-import org.hyperledger.besu.datatypes.rpc.JsonRpcResponse;
-
 /** The interface Plugin rpc response. */
-public interface PluginRpcResponse extends JsonRpcResponse {
+public interface PluginRpcResponse extends RpcResponse {
 
   /**
    * Get the result, unfortunately there is no typing yet, so call must know how to interact with

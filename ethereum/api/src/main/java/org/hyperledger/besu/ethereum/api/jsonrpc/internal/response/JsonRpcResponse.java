@@ -12,23 +12,16 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-package org.hyperledger.besu.ethereum.api.jsonrpc.internal.methods.permissioning;
+package org.hyperledger.besu.ethereum.api.jsonrpc.internal.response;
 
-import org.hyperledger.besu.ethereum.api.jsonrpc.RpcMethod;
-import org.hyperledger.besu.ethereum.permissioning.AccountLocalConfigPermissioningController;
+import org.hyperledger.besu.plugin.services.rpc.RpcResponse;
 
-import java.util.Optional;
+import com.fasterxml.jackson.annotation.JsonGetter;
 
-@Deprecated
-public class PermAddAccountsToWhitelist extends PermAddAccountsToAllowlist {
+public interface JsonRpcResponse extends RpcResponse {
 
-  public PermAddAccountsToWhitelist(
-      final Optional<AccountLocalConfigPermissioningController> allowlistController) {
-    super(allowlistController);
-  }
-
-  @Override
-  public String getName() {
-    return RpcMethod.PERM_ADD_ACCOUNTS_TO_WHITELIST.getMethodName();
+  @JsonGetter("jsonrpc")
+  default String getVersion() {
+    return "2.0";
   }
 }
