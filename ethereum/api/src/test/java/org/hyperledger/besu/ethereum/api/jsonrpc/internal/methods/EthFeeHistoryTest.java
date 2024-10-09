@@ -143,7 +143,7 @@ public class EthFeeHistoryTest {
         new EthFeeHistory(
             null, blockchain, miningCoordinator, ImmutableApiConfiguration.builder().build());
 
-    List<Wei> rewards = ethFeeHistory.computeRewards(rewardPercentiles, block);
+    List<Wei> rewards = ethFeeHistory.computeRewards(rewardPercentiles, block, nextBaseFee);
 
     // Define the expected rewards for each percentile
     // The expected rewards match the fees of the transactions at each percentile in the
@@ -182,7 +182,7 @@ public class EthFeeHistoryTest {
     EthFeeHistory ethFeeHistory =
         new EthFeeHistory(null, blockchain, miningCoordinator, apiConfiguration);
 
-    List<Wei> rewards = ethFeeHistory.computeRewards(rewardPercentiles, block);
+    List<Wei> rewards = ethFeeHistory.computeRewards(rewardPercentiles, block, nextBaseFee);
 
     // Define the expected bounded rewards for each percentile
     List<Wei> expectedBoundedRewards = Stream.of(2, 2, 2, 4, 5, 5, 5, 5, 5).map(Wei::of).toList();
