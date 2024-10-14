@@ -84,9 +84,9 @@ public class JsonTestParameters<S, T> {
      * @param runTest the run test
      */
     public void add(
-        final String name, final String fullPath, final S value, final boolean runTest) {
+            final String name, final String fullPath, final S value, final boolean runTest) {
       testParameters.add(
-          new Object[] {name, value, runTest && includes(name) && includes(fullPath)});
+              new Object[] {name, value, runTest && includes(name) && includes(fullPath)});
     }
 
     /**
@@ -101,17 +101,17 @@ public class JsonTestParameters<S, T> {
      * @param runTest the run test
      */
     public void add(
-        final String name,
-        final String fullPath,
-        final String fork,
-        final Bytes code,
-        final String containerKind,
-        final S value,
-        final boolean runTest) {
+            final String name,
+            final String fullPath,
+            final String fork,
+            final Bytes code,
+            final String containerKind,
+            final S value,
+            final boolean runTest) {
       testParameters.add(
-          new Object[] {
-            name, fork, code, containerKind, value, runTest && includes(name) && includes(fullPath)
-          });
+              new Object[] {
+                      name, fork, code, containerKind, value, runTest && includes(name) && includes(fullPath)
+              });
     }
 
     private boolean includes(final String name) {
@@ -149,12 +149,12 @@ public class JsonTestParameters<S, T> {
   }
 
   private static final ObjectMapper objectMapper =
-      new ObjectMapper(
-              new JsonFactoryBuilder()
-                  .streamReadConstraints(
-                      StreamReadConstraints.builder().maxStringLength(Integer.MAX_VALUE).build())
-                  .build())
-          .registerModule(new Jdk8Module());
+          new ObjectMapper(
+                  new JsonFactoryBuilder()
+                          .streamReadConstraints(
+                                  StreamReadConstraints.builder().maxStringLength(Integer.MAX_VALUE).build())
+                          .build())
+                  .registerModule(new Jdk8Module());
 
   // The type to which the json file is directly mapped
   private final Class<S> jsonFileMappedType;
@@ -190,8 +190,8 @@ public class JsonTestParameters<S, T> {
    */
   public static <T> JsonTestParameters<T, T> create(final Class<T> testCaseSpec) {
     return new JsonTestParameters<>(testCaseSpec, testCaseSpec)
-        .generator(
-            (name, fullPath, testCase, collector) -> collector.add(name, fullPath, testCase, true));
+            .generator(
+                    (name, fullPath, testCase, collector) -> collector.add(name, fullPath, testCase, true));
   }
 
   /**
@@ -204,7 +204,7 @@ public class JsonTestParameters<S, T> {
    * @return the json test parameters
    */
   public static <S, T> JsonTestParameters<S, T> create(
-      final Class<S> jsonFileMappedType, final Class<T> testCaseSpec) {
+          final Class<S> jsonFileMappedType, final Class<T> testCaseSpec) {
     return new JsonTestParameters<>(jsonFileMappedType, testCaseSpec);
   }
 
@@ -279,9 +279,9 @@ public class JsonTestParameters<S, T> {
     checkState(generator != null, "Missing generator function");
 
     final Collector<T> collector =
-        new Collector<>(
-            testIncludes.isEmpty() ? null : t -> matchAny(t, testIncludes),
-            t -> matchAny(t, testIgnores));
+            new Collector<>(
+                    testIncludes.isEmpty() ? null : t -> matchAny(t, testIncludes),
+                    t -> matchAny(t, testIgnores));
 
     for (final File file : filteredFiles) {
       final JsonTestCaseReader<S> testCase = parseFile(file);
@@ -317,9 +317,9 @@ public class JsonTestParameters<S, T> {
       }
       try (final Stream<Path> s = Files.walk(dir)) {
         s.map(Path::toFile)
-            .filter(f -> f.getPath().endsWith(".json"))
-            .filter(f -> !fileExcludes.contains(f.getName()))
-            .forEach(files::add);
+                .filter(f -> f.getPath().endsWith(".json"))
+                .filter(f -> !fileExcludes.contains(f.getName()))
+                .forEach(files::add);
       } catch (final IOException e) {
         throw new RuntimeException("Problem reading directory " + dir, e);
       }
@@ -329,22 +329,22 @@ public class JsonTestParameters<S, T> {
 
   private JsonTestCaseReader<S> parseFile(final File file) {
     final JavaType javaType =
-        objectMapper
-            .getTypeFactory()
-            .constructParametricType(JsonTestCaseReader.class, jsonFileMappedType);
+            objectMapper
+                    .getTypeFactory()
+                    .constructParametricType(JsonTestCaseReader.class, jsonFileMappedType);
 
     try {
       return objectMapper.readValue(file, javaType);
     } catch (final IOException e) {
       throw new RuntimeException(
-          "Error parsing test case file " + file + " to class " + jsonFileMappedType, e);
+              "Error parsing test case file " + file + " to class " + jsonFileMappedType, e);
     }
   }
 
-  private static class JsonTestCaseReader<T> {
+  public static class JsonTestCaseReader<T> {
 
     /** The Test case specs. */
-    final Map<String, T> testCaseSpecs;
+    public final Map<String, T> testCaseSpecs;
 
     /**
      * Public constructor.
