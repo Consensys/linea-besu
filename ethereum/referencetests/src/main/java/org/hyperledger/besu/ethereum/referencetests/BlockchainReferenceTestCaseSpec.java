@@ -41,6 +41,7 @@ import org.hyperledger.besu.ethereum.worldstate.WorldStateArchive;
 import org.hyperledger.besu.evm.log.LogsBloomFilter;
 import org.hyperledger.besu.evm.worldstate.WorldUpdater;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -69,7 +70,7 @@ public class BlockchainReferenceTestCaseSpec {
   private final ProtocolContext protocolContext;
 
   private static WorldStateArchive buildWorldStateArchive(
-      final Map<String, ReferenceTestWorldState.AccountMock> accounts) {
+          final Map<String, ReferenceTestWorldState.AccountMock> accounts) {
     final WorldStateArchive worldStateArchive = createInMemoryWorldStateArchive();
 
     final MutableWorldState worldState = worldStateArchive.getMutable();
@@ -77,7 +78,7 @@ public class BlockchainReferenceTestCaseSpec {
 
     for (final Map.Entry<String, ReferenceTestWorldState.AccountMock> entry : accounts.entrySet()) {
       ReferenceTestWorldState.insertAccount(
-          updater, Address.fromHexString(entry.getKey()), entry.getValue());
+              updater, Address.fromHexString(entry.getKey()), entry.getValue());
     }
 
     updater.commit();
@@ -93,13 +94,13 @@ public class BlockchainReferenceTestCaseSpec {
 
   @JsonCreator
   public BlockchainReferenceTestCaseSpec(
-      @JsonProperty("network") final String network,
-      @JsonProperty("blocks") final CandidateBlock[] candidateBlocks,
-      @JsonProperty("genesisBlockHeader") final ReferenceTestBlockHeader genesisBlockHeader,
-      @SuppressWarnings("unused") @JsonProperty("genesisRLP") final String genesisRLP,
-      @JsonProperty("pre") final Map<String, ReferenceTestWorldState.AccountMock> accounts,
-      @JsonProperty("lastblockhash") final String lastBlockHash,
-      @JsonProperty("sealEngine") final String sealEngine) {
+          @JsonProperty("network") final String network,
+          @JsonProperty("blocks") final CandidateBlock[] candidateBlocks,
+          @JsonProperty("genesisBlockHeader") final ReferenceTestBlockHeader genesisBlockHeader,
+          @SuppressWarnings("unused") @JsonProperty("genesisRLP") final String genesisRLP,
+          @JsonProperty("pre") final Map<String, ReferenceTestWorldState.AccountMock> accounts,
+          @JsonProperty("lastblockhash") final String lastBlockHash,
+          @JsonProperty("sealEngine") final String sealEngine) {
     this.network = network;
     this.candidateBlocks = candidateBlocks;
     this.genesisBlockHeader = genesisBlockHeader;
@@ -108,7 +109,7 @@ public class BlockchainReferenceTestCaseSpec {
     this.blockchain = buildBlockchain(genesisBlockHeader);
     this.sealEngine = sealEngine;
     this.protocolContext =
-        new ProtocolContext(this.blockchain, this.worldStateArchive, null, new BadBlockManager());
+            new ProtocolContext(this.blockchain, this.worldStateArchive, null, new BadBlockManager());
   }
 
   public String getNetwork() {
@@ -147,126 +148,131 @@ public class BlockchainReferenceTestCaseSpec {
 
     @JsonCreator
     public ReferenceTestBlockHeader(
-        @JsonProperty("parentHash") final String parentHash,
-        @JsonProperty("uncleHash") final String uncleHash,
-        @JsonProperty("coinbase") final String coinbase,
-        @JsonProperty("stateRoot") final String stateRoot,
-        @JsonProperty("transactionsTrie") final String transactionsTrie,
-        @JsonProperty("receiptTrie") final String receiptTrie,
-        @JsonProperty("bloom") final String bloom,
-        @JsonProperty("difficulty") final String difficulty,
-        @JsonProperty("number") final String number,
-        @JsonProperty("gasLimit") final String gasLimit,
-        @JsonProperty("gasUsed") final String gasUsed,
-        @JsonProperty("timestamp") final String timestamp,
-        @JsonProperty("extraData") final String extraData,
-        @JsonProperty("baseFeePerGas") final String baseFee,
-        @JsonProperty("mixHash") final String mixHash,
-        @JsonProperty("nonce") final String nonce,
-        @JsonProperty("withdrawalsRoot") final String withdrawalsRoot,
-        @JsonProperty("requestsRoot") final String requestsRoot,
-        @JsonProperty("blobGasUsed") final String blobGasUsed,
-        @JsonProperty("excessBlobGas") final String excessBlobGas,
-        @JsonProperty("parentBeaconBlockRoot") final String parentBeaconBlockRoot,
-        @JsonProperty("hash") final String hash) {
+            @JsonProperty("parentHash") final String parentHash,
+            @JsonProperty("uncleHash") final String uncleHash,
+            @JsonProperty("coinbase") final String coinbase,
+            @JsonProperty("stateRoot") final String stateRoot,
+            @JsonProperty("transactionsTrie") final String transactionsTrie,
+            @JsonProperty("receiptTrie") final String receiptTrie,
+            @JsonProperty("bloom") final String bloom,
+            @JsonProperty("difficulty") final String difficulty,
+            @JsonProperty("number") final String number,
+            @JsonProperty("gasLimit") final String gasLimit,
+            @JsonProperty("gasUsed") final String gasUsed,
+            @JsonProperty("timestamp") final String timestamp,
+            @JsonProperty("extraData") final String extraData,
+            @JsonProperty("baseFeePerGas") final String baseFee,
+            @JsonProperty("mixHash") final String mixHash,
+            @JsonProperty("nonce") final String nonce,
+            @JsonProperty("withdrawalsRoot") final String withdrawalsRoot,
+            @JsonProperty("requestsRoot") final String requestsRoot,
+            @JsonProperty("blobGasUsed") final String blobGasUsed,
+            @JsonProperty("excessBlobGas") final String excessBlobGas,
+            @JsonProperty("parentBeaconBlockRoot") final String parentBeaconBlockRoot,
+            @JsonProperty("hash") final String hash) {
       super(
-          Hash.fromHexString(parentHash), // parentHash
-          uncleHash == null ? Hash.EMPTY_LIST_HASH : Hash.fromHexString(uncleHash), // ommersHash
-          Address.fromHexString(coinbase), // coinbase
-          Hash.fromHexString(stateRoot), // stateRoot
-          transactionsTrie == null
-              ? Hash.EMPTY_TRIE_HASH
-              : Hash.fromHexString(transactionsTrie), // transactionsRoot
-          receiptTrie == null
-              ? Hash.EMPTY_TRIE_HASH
-              : Hash.fromHexString(receiptTrie), // receiptTrie
-          LogsBloomFilter.fromHexString(bloom), // bloom
-          Difficulty.fromHexString(difficulty), // difficulty
-          Long.decode(number), // number
-          Long.decode(gasLimit), // gasLimit
-          Long.decode(gasUsed), // gasUsed
-          Long.decode(timestamp), // timestamp
-          Bytes.fromHexString(extraData), // extraData
-          baseFee != null ? Wei.fromHexString(baseFee) : null, // baseFee
-          Hash.fromHexString(mixHash), // mixHash
-          Bytes.fromHexStringLenient(nonce).toLong(),
-          withdrawalsRoot != null ? Hash.fromHexString(withdrawalsRoot) : null,
-          blobGasUsed != null ? Long.decode(blobGasUsed) : 0,
-          excessBlobGas != null ? BlobGas.fromHexString(excessBlobGas) : null,
-          parentBeaconBlockRoot != null ? Bytes32.fromHexString(parentBeaconBlockRoot) : null,
-          requestsRoot != null ? Hash.fromHexString(requestsRoot) : null,
-          new BlockHeaderFunctions() {
-            @Override
-            public Hash hash(final BlockHeader header) {
-              return hash == null ? null : Hash.fromHexString(hash);
-            }
+              Hash.fromHexString(parentHash), // parentHash
+              uncleHash == null ? Hash.EMPTY_LIST_HASH : Hash.fromHexString(uncleHash), // ommersHash
+              Address.fromHexString(coinbase), // coinbase
+              Hash.fromHexString(stateRoot), // stateRoot
+              transactionsTrie == null
+                      ? Hash.EMPTY_TRIE_HASH
+                      : Hash.fromHexString(transactionsTrie), // transactionsRoot
+              receiptTrie == null
+                      ? Hash.EMPTY_TRIE_HASH
+                      : Hash.fromHexString(receiptTrie), // receiptTrie
+              LogsBloomFilter.fromHexString(bloom), // bloom
+              Difficulty.fromHexString(difficulty), // difficulty
+              Long.decode(number), // number
+              Long.decode(gasLimit), // gasLimit
+              Long.decode(gasUsed), // gasUsed
+              Long.decode(timestamp), // timestamp
+              Bytes.fromHexString(extraData), // extraData
+              baseFee != null ? Wei.fromHexString(baseFee) : null, // baseFee
+              Hash.fromHexString(mixHash), // mixHash
+              Bytes.fromHexStringLenient(nonce).toLong(),
+              withdrawalsRoot != null ? Hash.fromHexString(withdrawalsRoot) : null,
+              blobGasUsed != null ? Long.decode(blobGasUsed) : 0,
+              excessBlobGas != null ? BlobGas.fromHexString(excessBlobGas) : null,
+              parentBeaconBlockRoot != null ? Bytes32.fromHexString(parentBeaconBlockRoot) : null,
+              requestsRoot != null ? Hash.fromHexString(requestsRoot) : null,
+              new BlockHeaderFunctions() {
+                @Override
+                public Hash hash(final BlockHeader header) {
+                  return hash == null ? null : Hash.fromHexString(hash);
+                }
 
-            @Override
-            public ParsedExtraData parseExtraData(final BlockHeader header) {
-              return null;
-            }
-          });
+                @Override
+                public ParsedExtraData parseExtraData(final BlockHeader header) {
+                  return null;
+                }
+              });
     }
   }
 
   @JsonIgnoreProperties({
-    "blocknumber",
-    "chainname",
-    "chainnetwork",
-    "expectException",
-    "expectExceptionByzantium",
-    "expectExceptionConstantinople",
-    "expectExceptionConstantinopleFix",
-    "expectExceptionIstanbul",
-    "expectExceptionEIP150",
-    "expectExceptionEIP158",
-    "expectExceptionFrontier",
-    "expectExceptionHomestead",
-    "expectExceptionALL",
-    "hasBigInt",
-    "rlp_decoded",
-    "transactionSequence"
+          "blocknumber",
+          "chainname",
+          "chainnetwork",
+          "expectException",
+          "expectExceptionByzantium",
+          "expectExceptionConstantinople",
+          "expectExceptionConstantinopleFix",
+          "expectExceptionIstanbul",
+          "expectExceptionEIP150",
+          "expectExceptionEIP158",
+          "expectExceptionFrontier",
+          "expectExceptionHomestead",
+          "expectExceptionALL",
+          "hasBigInt",
+          "rlp_decoded"
   })
   public static class CandidateBlock {
 
     private final Bytes rlp;
 
     private final Boolean valid;
+    private final List<TransactionSequence> transactionSequence;
 
     @JsonCreator
     public CandidateBlock(
-        @JsonProperty("rlp") final String rlp,
-        @JsonProperty("blockHeader") final Object blockHeader,
-        @JsonProperty("transactions") final Object transactions,
-        @JsonProperty("uncleHeaders") final Object uncleHeaders,
-        @JsonProperty("withdrawals") final Object withdrawals,
-        @JsonProperty("depositRequests") final Object depositRequests,
-        @JsonProperty("withdrawalRequests") final Object withdrawalRequests,
-        @JsonProperty("consolidationRequests") final Object consolidationRequests) {
-      boolean blockVaid = true;
+            @JsonProperty("rlp") final String rlp,
+            @JsonProperty("blockHeader") final Object blockHeader,
+            @JsonProperty("transactions") final Object transactions,
+            @JsonProperty("uncleHeaders") final Object uncleHeaders,
+            @JsonProperty("withdrawals") final Object withdrawals,
+            @JsonProperty("depositRequests") final Object depositRequests,
+            @JsonProperty("withdrawalRequests") final Object withdrawalRequests,
+            @JsonProperty("consolidationRequests") final Object consolidationRequests,
+            @JsonProperty("transactionSequence") final List<TransactionSequence> transactionSequence) {
+      boolean blockValid = true;
       // The BLOCK__WrongCharAtRLP_0 test has an invalid character in its rlp string.
       Bytes rlpAttempt = null;
       try {
         rlpAttempt = Bytes.fromHexString(rlp);
       } catch (final IllegalArgumentException e) {
-        blockVaid = false;
+        blockValid = false;
       }
       this.rlp = rlpAttempt;
 
       if (blockHeader == null
-          && transactions == null
-          && uncleHeaders == null
-          && withdrawals == null) {
-        blockVaid = false;
+              && transactions == null
+              && uncleHeaders == null
+              && withdrawals == null) {
+        blockValid = false;
       }
 
-      this.valid = blockVaid;
+      this.valid = blockValid;
+      this.transactionSequence = transactionSequence;
     }
 
     public boolean isValid() {
       return valid;
     }
 
+    public boolean areAllTransactionsValid() {
+      return transactionSequence == null || transactionSequence.stream().filter(t -> !t.valid()).count() == 0;
+    }
     public boolean isExecutable() {
       return rlp != null;
     }
@@ -277,15 +283,15 @@ public class BlockchainReferenceTestCaseSpec {
       final MainnetBlockHeaderFunctions blockHeaderFunctions = new MainnetBlockHeaderFunctions();
       final BlockHeader header = BlockHeader.readFrom(input, blockHeaderFunctions);
       final BlockBody body =
-          new BlockBody(
-              input.readList(Transaction::readFrom),
-              input.readList(inputData -> BlockHeader.readFrom(inputData, blockHeaderFunctions)),
-              input.isEndOfCurrentList()
-                  ? Optional.empty()
-                  : Optional.of(input.readList(Withdrawal::readFrom)),
-              input.isEndOfCurrentList()
-                  ? Optional.empty()
-                  : Optional.of(input.readList(Request::readFrom)));
+              new BlockBody(
+                      input.readList(Transaction::readFrom),
+                      input.readList(inputData -> BlockHeader.readFrom(inputData, blockHeaderFunctions)),
+                      input.isEndOfCurrentList()
+                              ? Optional.empty()
+                              : Optional.of(input.readList(Withdrawal::readFrom)),
+                      input.isEndOfCurrentList()
+                              ? Optional.empty()
+                              : Optional.of(input.readList(Request::readFrom)));
       return new Block(header, body);
     }
   }
