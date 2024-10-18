@@ -35,6 +35,7 @@ public class CliqueDifficultyCalculator implements DifficultyCalculator {
    * Instantiates a new Clique difficulty calculator.
    *
    * @param localAddress the local address
+   * @param validatorProviderSupplier the validator provider supplier
    */
   public CliqueDifficultyCalculator(
       final Address localAddress, final Supplier<ValidatorProvider> validatorProviderSupplier) {

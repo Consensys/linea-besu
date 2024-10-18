@@ -68,6 +68,7 @@ public class CliqueProtocolSchedule {
    * @param isParallelTxProcessingEnabled indicates whether parallel transaction is enabled
    * @param metricsSystem A metricSystem instance to be able to expose metrics in the underlying
    *     calls
+   * @param validatorProviderSupplier the validator provider supplier
    * @return the protocol schedule
    */
   public static ProtocolSchedule create(

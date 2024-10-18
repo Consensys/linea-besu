@@ -48,6 +48,8 @@ import com.google.common.base.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 /** The Clique consensus controller builder. */
 public class CliqueBesuControllerBuilder extends BesuControllerBuilder {
 
@@ -57,7 +59,7 @@ public class CliqueBesuControllerBuilder extends BesuControllerBuilder {
   private EpochManager epochManager;
   private final BlockInterface blockInterface = new CliqueBlockInterface();
   private ForksSchedule<CliqueConfigOptions> forksSchedule;
-  private Supplier<ValidatorProvider> validatorProviderSupplier;
+  private final AtomicReference<ValidatorProvider> validatorProviderRef = new AtomicReference<>();
 
   /** Default constructor. */
   public CliqueBesuControllerBuilder() {}
@@ -141,7 +143,7 @@ public class CliqueBesuControllerBuilder extends BesuControllerBuilder {
         badBlockManager,
         isParallelTxProcessingEnabled,
         metricsSystem,
-        validatorProviderSupplier);
+        validatorProviderRef::get);
   }
 
   @Override
@@ -162,9 +164,9 @@ public class CliqueBesuControllerBuilder extends BesuControllerBuilder {
   @Override
   protected CliqueContext createConsensusContext(
       final ProtocolContext protocolContext, final ProtocolSchedule protocolSchedule) {
-    validatorProviderSupplier = () -> createValidatorProvider(protocolContext.getBlockchain());
+    validatorProviderRef.set(createValidatorProvider(protocolContext.getBlockchain()));
     final CliqueContext cliqueContext =
-        new CliqueContext(validatorProviderSupplier.get(), epochManager, blockInterface);
+        new CliqueContext(validatorProviderRef.get(), epochManager, blockInterface);
     installCliqueBlockChoiceRule(protocolContext.getBlockchain(), cliqueContext);
     return cliqueContext;
   }

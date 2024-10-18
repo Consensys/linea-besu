@@ -19,6 +19,9 @@ import org.hyperledger.besu.ethereum.mainnet.ProtocolSchedule;
 /** The ConsensusContextFactory interface defines a method for creating a consensus context. */
 @FunctionalInterface
 public interface ConsensusContextFactory {
+  /**
+   * Helper for when you do not need a consensus context
+   */
   ConsensusContextFactory NULL = (pc, ps) -> null;
 
   /**
