@@ -514,7 +514,8 @@ subprojects {
     return result
   }
 
-  if (sourceSetIsPopulated("main") || sourceSetIsPopulated("testSupport")) {
+
+  if (sourceSetIsPopulated("main") || sourceSetIsPopulated("testSupport") || project.name == "platform") {
     apply plugin: 'maven-publish'
 
     publishing {
@@ -528,10 +529,12 @@ subprojects {
           }
         }
       }
+
       publications {
         mavenJava(MavenPublication) {
           groupId "io.consensys.linea-besu.internal"
           version "${project.version}"
+
           if (sourceSetIsPopulated("main")) {
             from components.java
             artifact sourcesJar
@@ -541,6 +544,7 @@ subprojects {
           if (sourceSetIsPopulated("testSupport")) {
             artifact testSupportJar
           }
+
           versionMapping {
             usage('java-api') { fromResolutionOf('runtimeClasspath') }
             usage('java-runtime') { fromResolutionResult() }
@@ -564,6 +568,7 @@ subprojects {
       }
     }
   }
+
 
   tasks.withType(Test) {
     // If GRADLE_MAX_TEST_FORKS is not set, use half the available processors
