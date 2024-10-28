@@ -14,7 +14,16 @@
  */
 package org.hyperledger.besu.plugin.services.metrics;
 
-public interface Summary {
+/**
+ * A histogram samples observations (usually things like request durations or response sizes) and
+ * counts them in configurable buckets. It also provides a sum of all observed values.
+ */
+public interface Histogram {
 
+  /**
+   * Observe the given amount.
+   *
+   * @param amount the amount
+   */
   void observe(double amount);
 }
