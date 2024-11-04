@@ -17,6 +17,7 @@ package org.hyperledger.besu.metrics.noop;
 import org.hyperledger.besu.metrics.ObservableMetricsSystem;
 import org.hyperledger.besu.metrics.Observation;
 import org.hyperledger.besu.plugin.services.metrics.Counter;
+import org.hyperledger.besu.plugin.services.metrics.Histogram;
 import org.hyperledger.besu.plugin.services.metrics.LabelledGauge;
 import org.hyperledger.besu.plugin.services.metrics.LabelledMetric;
 import org.hyperledger.besu.plugin.services.metrics.MetricCategory;
@@ -45,6 +46,9 @@ public class NoOpMetricsSystem implements ObservableMetricsSystem {
   /** The constant NO_OP_OPERATION_TIMER. */
   public static final OperationTimer NO_OP_OPERATION_TIMER = () -> NO_OP_TIMING_CONTEXT;
 
+  /** The constant NO_OP_HISTOGRAM. */
+  public static final Histogram NO_OP_HISTOGRAM = d -> {};
+
   /** The constant NO_OP_LABELLED_1_COUNTER. */
   public static final LabelledMetric<Counter> NO_OP_LABELLED_1_COUNTER =
       new LabelCountingNoOpMetric<>(1, NO_OP_COUNTER);
@@ -60,6 +64,10 @@ public class NoOpMetricsSystem implements ObservableMetricsSystem {
   /** The constant NO_OP_LABELLED_1_OPERATION_TIMER. */
   public static final LabelledMetric<OperationTimer> NO_OP_LABELLED_1_OPERATION_TIMER =
       new LabelCountingNoOpMetric<>(1, NO_OP_OPERATION_TIMER);
+
+  /** The constant NO_OP_LABELLED_1_HISTOGRAM. */
+  public static final LabelledMetric<Histogram> NO_OP_LABELLED_1_HISTOGRAM =
+      new LabelCountingNoOpMetric<>(1, NO_OP_HISTOGRAM);
 
   /** The constant NO_OP_LABELLED_1_GAUGE. */
   public static final LabelledGauge NO_OP_LABELLED_1_GAUGE =
@@ -137,12 +145,36 @@ public class NoOpMetricsSystem implements ObservableMetricsSystem {
     }
   }
 
+  /**
+   * Gets histogram labelled metric.
+   *
+   * @param labelCount the label count
+   * @return the histogram labelled metric
+   */
+  public static LabelledMetric<Histogram> getHistogramLabelledMetric(final int labelCount) {
+    if (labelCount == 1) {
+      return NO_OP_LABELLED_1_HISTOGRAM;
+    } else {
+      return new LabelCountingNoOpMetric<>(labelCount, NO_OP_HISTOGRAM);
+    }
+  }
+
   @Override
   public void createGauge(
       final MetricCategory category,
       final String name,
       final String help,
       final DoubleSupplier valueSupplier) {}
+
+  @Override
+  public LabelledMetric<Histogram> createLabelledHistogram(
+      final MetricCategory category,
+      final String name,
+      final String help,
+      final double[] buckets,
+      final String... labelNames) {
+    return null;
+  }
 
   @Override
   public LabelledGauge createLabelledGauge(

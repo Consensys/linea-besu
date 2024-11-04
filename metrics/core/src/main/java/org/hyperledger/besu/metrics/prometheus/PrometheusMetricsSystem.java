@@ -59,6 +59,8 @@ public class PrometheusMetricsSystem implements ObservableMetricsSystem {
       cachedCounters = new ConcurrentHashMap<>();
   private final Map<String, LabelledMetric<OperationTimer>> cachedTimers =
       new ConcurrentHashMap<>();
+  private final Map<String, LabelledMetric<org.hyperledger.besu.plugin.services.metrics.Histogram>>
+      cachedHistograms = new ConcurrentHashMap<>();
   private final Set<String> totalSuffixedCounters = new ConcurrentHashSet<>();
 
   private final Set<MetricCategory> enabledCategories;
@@ -107,6 +109,29 @@ public class PrometheusMetricsSystem implements ObservableMetricsSystem {
             return new PrometheusCounter(counter);
           } else {
             return NoOpMetricsSystem.getCounterLabelledMetric(labelNames.length);
+          }
+        });
+  }
+
+  @Override
+  public LabelledMetric<org.hyperledger.besu.plugin.services.metrics.Histogram>
+      createLabelledHistogram(
+          final MetricCategory category,
+          final String name,
+          final String help,
+          final double[] buckets,
+          final String... labelNames) {
+    final String metricName = convertToPrometheusName(category, name);
+    return cachedHistograms.computeIfAbsent(
+        metricName,
+        k -> {
+          if (isCategoryEnabled(category)) {
+            final Histogram histogram =
+                Histogram.build(metricName, help).labelNames(labelNames).buckets(buckets).create();
+            addCollectorUnchecked(category, histogram);
+            return new PrometheusHistogram(histogram);
+          } else {
+            return NoOpMetricsSystem.getHistogramLabelledMetric(labelNames.length);
           }
         });
   }
