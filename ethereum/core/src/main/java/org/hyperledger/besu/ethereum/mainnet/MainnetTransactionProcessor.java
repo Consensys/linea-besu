@@ -537,7 +537,7 @@ public class MainnetTransactionProcessor {
       coinbase.incrementBalance(coinbaseWeiDelta);
 
       operationTracer.traceEndTransaction(
-          evmWorldUpdater.updater(),
+          worldUpdater,
           transaction,
           initialFrame.getState() == MessageFrame.State.COMPLETED_SUCCESS,
           initialFrame.getOutputData(),
