@@ -20,10 +20,10 @@ import org.hyperledger.besu.metrics.Observation;
 import org.hyperledger.besu.metrics.StandardMetricCategory;
 import org.hyperledger.besu.metrics.noop.NoOpMetricsSystem;
 import org.hyperledger.besu.plugin.services.metrics.Counter;
-import org.hyperledger.besu.plugin.services.metrics.ExternalSummary;
 import org.hyperledger.besu.plugin.services.metrics.Histogram;
-import org.hyperledger.besu.plugin.services.metrics.LabelledGauge;
 import org.hyperledger.besu.plugin.services.metrics.LabelledMetric;
+import org.hyperledger.besu.plugin.services.metrics.LabelledSuppliedMetric;
+import org.hyperledger.besu.plugin.services.metrics.LabelledSuppliedSummary;
 import org.hyperledger.besu.plugin.services.metrics.MetricCategory;
 import org.hyperledger.besu.plugin.services.metrics.OperationTimer;
 
@@ -42,7 +42,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.DoubleSupplier;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.inject.Singleton;
 
@@ -135,7 +134,7 @@ public class OpenTelemetrySystem implements ObservableMetricsSystem {
 
   @Override
   public Stream<Observation> streamObservations(final MetricCategory category) {
-    return streamObservations().filter(metricData -> metricData.getCategory().equals(category));
+    return streamObservations().filter(metricData -> metricData.category().equals(category));
   }
 
   @Override
@@ -247,11 +246,14 @@ public class OpenTelemetrySystem implements ObservableMetricsSystem {
   }
 
   @Override
-  public void trackExternalSummary(
+  public LabelledSuppliedSummary createLabelledSuppliedSummary(
       final MetricCategory category,
       final String name,
       final String help,
-      final Supplier<ExternalSummary> summarySupplier) {}
+      final String... labelNames) {
+    // not yet supported
+    return (LabelledSuppliedSummary) NoOpMetricsSystem.getLabelledSuppliedMetric(labelNames.length);
+  }
 
   @Override
   public LabelledMetric<OperationTimer> createLabelledTimer(
@@ -289,21 +291,36 @@ public class OpenTelemetrySystem implements ObservableMetricsSystem {
   }
 
   @Override
-  public void createGuavaCacheCollector(
-      final MetricCategory category, final String name, final Cache<?, ?> cache) {}
-
-  @Override
   public LabelledMetric<Histogram> createLabelledHistogram(
       final MetricCategory category,
       final String name,
       final String help,
       final double[] buckets,
       final String... labelNames) {
-    return null;
+    // not yet supported
+    return NoOpMetricsSystem.getHistogramLabelledMetric(labelNames.length);
   }
 
   @Override
-  public LabelledGauge createLabelledGauge(
+  public void createGuavaCacheCollector(
+      final MetricCategory category, final String name, final Cache<?, ?> cache) {}
+
+  @Override
+  public LabelledSuppliedMetric createLabelledSuppliedCounter(
+      final MetricCategory category,
+      final String name,
+      final String help,
+      final String... labelNames) {
+    LOG.trace("Creating a labelled supplied counter {}", name);
+    if (isCategoryEnabled(category)) {
+      return new OpenTelemetrySuppliedCounter(
+          name, help, sdkMeterProvider.get(category.getName()), List.of(labelNames));
+    }
+    return NoOpMetricsSystem.getLabelledSuppliedMetric(labelNames.length);
+  }
+
+  @Override
+  public LabelledSuppliedMetric createLabelledSuppliedGauge(
       final MetricCategory category,
       final String name,
       final String help,
@@ -313,7 +330,7 @@ public class OpenTelemetrySystem implements ObservableMetricsSystem {
       return new OpenTelemetryGauge(
           name, help, sdkMeterProvider.get(category.getName()), List.of(labelNames));
     }
-    return NoOpMetricsSystem.getLabelledGauge(labelNames.length);
+    return NoOpMetricsSystem.getLabelledSuppliedMetric(labelNames.length);
   }
 
   @Override

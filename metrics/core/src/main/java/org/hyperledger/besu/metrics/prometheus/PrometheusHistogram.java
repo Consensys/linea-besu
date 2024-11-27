@@ -1,5 +1,5 @@
 /*
- * Copyright ConsenSys AG.
+ * Copyright contributors to Besu.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -16,30 +16,26 @@ package org.hyperledger.besu.metrics.prometheus;
 
 import org.hyperledger.besu.plugin.services.metrics.Histogram;
 import org.hyperledger.besu.plugin.services.metrics.LabelledMetric;
+import org.hyperledger.besu.plugin.services.metrics.MetricCategory;
 
-class PrometheusHistogram implements LabelledMetric<Histogram> {
+/**
+ * A Prometheus histogram. A histogram samples durations and counts them in configurable buckets. It
+ * also provides a sum of all observed values.
+ */
+class PrometheusHistogram extends AbstractPrometheusHistogram implements LabelledMetric<Histogram> {
 
-  private final io.prometheus.client.Histogram histogram;
-
-  public PrometheusHistogram(final io.prometheus.client.Histogram histogram) {
-    this.histogram = histogram;
+  public PrometheusHistogram(
+      final MetricCategory category,
+      final String name,
+      final String help,
+      final double[] buckets,
+      final String... labelNames) {
+    super(category, name, help, buckets, labelNames);
   }
 
   @Override
   public Histogram labels(final String... labels) {
-    return new UnlabelledHistogram(histogram.labels(labels));
-  }
-
-  private static class UnlabelledHistogram implements Histogram {
-    private final io.prometheus.client.Histogram.Child amount;
-
-    private UnlabelledHistogram(final io.prometheus.client.Histogram.Child amount) {
-      this.amount = amount;
-    }
-
-    @Override
-    public void observe(final double amount) {
-      this.amount.observe(amount);
-    }
+    final var ddp = histogram.labelValues(labels);
+    return ddp::observe;
   }
 }
