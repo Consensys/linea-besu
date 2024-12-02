@@ -35,7 +35,7 @@ public class JsonRpcExecutorHandler {
   private static final Logger LOG = LoggerFactory.getLogger(JsonRpcExecutorHandler.class);
 
   // Default timeout for RPC calls in seconds
-  private static final long DEFAULT_TIMEOUT_MILLISECONDS = 30_000L;
+  private static final long DEFAULT_TIMEOUT_MILLISECONDS = 300_000L; // hot fix for Linea Sepolia
 
   private JsonRpcExecutorHandler() {}
 
