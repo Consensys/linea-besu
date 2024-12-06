@@ -79,7 +79,7 @@ class JsonRpcExecutorHandlerTest {
     handler.handle(mockContext);
 
     // Assert
-    verify(mockVertx).setTimer(eq(30000L), any());
+    verify(mockVertx).setTimer(eq(300000L), any());
 
     // Simulate timeout
     timerHandlerCaptor.getValue().handle(1L);

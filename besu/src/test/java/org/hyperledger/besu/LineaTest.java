@@ -21,6 +21,7 @@ import org.hyperledger.besu.config.GenesisConfigFile;
 import org.hyperledger.besu.controller.BesuController;
 import org.hyperledger.besu.cryptoservices.NodeKeyUtils;
 import org.hyperledger.besu.ethereum.GasLimitCalculator;
+import org.hyperledger.besu.ethereum.api.ImmutableApiConfiguration;
 import org.hyperledger.besu.ethereum.core.ImmutableMiningConfiguration;
 import org.hyperledger.besu.ethereum.core.InMemoryKeyValueStorageProvider;
 import org.hyperledger.besu.ethereum.core.PrivacyParameters;
@@ -81,6 +82,7 @@ public class LineaTest {
         .gasLimitCalculator(GasLimitCalculator.constant())
         .evmConfiguration(EvmConfiguration.DEFAULT)
         .networkConfiguration(NetworkingConfiguration.create())
+        .apiConfiguration(ImmutableApiConfiguration.builder().build())
         .build();
   }
 }
