@@ -17,7 +17,7 @@ package org.hyperledger.besu;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.Mockito.mock;
 
-import org.hyperledger.besu.config.GenesisConfigFile;
+import org.hyperledger.besu.config.GenesisConfig;
 import org.hyperledger.besu.controller.BesuController;
 import org.hyperledger.besu.cryptoservices.NodeKeyUtils;
 import org.hyperledger.besu.ethereum.GasLimitCalculator;
@@ -67,7 +67,7 @@ public class LineaTest {
 
   private BesuController setUpController(final String genesisFile) {
     return new BesuController.Builder()
-        .fromGenesisFile(GenesisConfigFile.fromResource(genesisFile), SyncMode.FULL)
+        .fromGenesisFile(GenesisConfig.fromResource(genesisFile), SyncMode.FULL)
         .synchronizerConfiguration(SynchronizerConfiguration.builder().build())
         .ethProtocolConfiguration(EthProtocolConfiguration.defaultConfig())
         .storageProvider(new InMemoryKeyValueStorageProvider())
