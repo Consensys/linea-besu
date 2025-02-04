@@ -82,7 +82,6 @@ public class MinPriorityFeePerGasTransactionSelector extends AbstractTransaction
   @Override
   public TransactionSelectionResult evaluateTransactionPostProcessing(
       final TransactionEvaluationContext evaluationContext,
-      final TransactionSelectionResults blockTransactionResults,
       final TransactionProcessingResult processingResult) {
     return TransactionSelectionResult.SELECTED;
   }

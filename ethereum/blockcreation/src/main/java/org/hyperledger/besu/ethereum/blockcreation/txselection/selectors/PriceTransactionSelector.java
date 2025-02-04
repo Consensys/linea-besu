@@ -57,7 +57,6 @@ public class PriceTransactionSelector extends AbstractTransactionSelector {
   @Override
   public TransactionSelectionResult evaluateTransactionPostProcessing(
       final TransactionEvaluationContext evaluationContext,
-      final TransactionSelectionResults blockTransactionResults,
       final TransactionProcessingResult processingResult) {
     // All necessary checks were done in the pre-processing method, so nothing to do here.
     return TransactionSelectionResult.SELECTED;

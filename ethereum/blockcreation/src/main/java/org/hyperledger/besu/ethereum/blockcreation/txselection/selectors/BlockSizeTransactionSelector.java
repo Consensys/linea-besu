@@ -20,6 +20,7 @@ import org.hyperledger.besu.ethereum.blockcreation.txselection.TransactionSelect
 import org.hyperledger.besu.ethereum.core.Transaction;
 import org.hyperledger.besu.ethereum.processing.TransactionProcessingResult;
 import org.hyperledger.besu.plugin.data.TransactionSelectionResult;
+import org.hyperledger.besu.plugin.services.txselection.SelectorsStateManager;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,11 +30,15 @@ import org.slf4j.LoggerFactory;
  * evaluating transactions based on block size. It checks if a transaction is too large for the
  * block and determines the selection result accordingly.
  */
-public class BlockSizeTransactionSelector extends AbstractTransactionSelector {
+public class BlockSizeTransactionSelector extends AbstractStatefulTransactionSelector<Long> {
   private static final Logger LOG = LoggerFactory.getLogger(BlockSizeTransactionSelector.class);
 
-  public BlockSizeTransactionSelector(final BlockSelectionContext context) {
-    super(context);
+  private final long blockGasLimit;
+
+  public BlockSizeTransactionSelector(
+      final BlockSelectionContext context, final SelectorsStateManager selectorsStateManager) {
+    super(context, selectorsStateManager, 0L, SelectorsStateManager.StateDuplicator::duplicateLong);
+    this.blockGasLimit = context.pendingBlockHeader().getGasLimit();
   }
 
   /**
@@ -50,29 +55,30 @@ public class BlockSizeTransactionSelector extends AbstractTransactionSelector {
       final TransactionEvaluationContext evaluationContext,
       final TransactionSelectionResults transactionSelectionResults) {
 
-    if (transactionTooLargeForBlock(
-        evaluationContext.getTransaction(), transactionSelectionResults)) {
+    final long cumulativeGasUsed = getWorkingState();
+
+    if (transactionTooLargeForBlock(evaluationContext.getTransaction(), cumulativeGasUsed)) {
       LOG.atTrace()
           .setMessage("Transaction {} too large to select for block creation")
           .addArgument(evaluationContext.getPendingTransaction()::toTraceLog)
           .log();
-      if (blockOccupancyAboveThreshold(transactionSelectionResults)) {
+      if (blockOccupancyAboveThreshold(cumulativeGasUsed)) {
         LOG.trace("Block occupancy above threshold, completing operation");
         return TransactionSelectionResult.BLOCK_OCCUPANCY_ABOVE_THRESHOLD;
-      } else if (blockFull(transactionSelectionResults)) {
+      } else if (blockFull(cumulativeGasUsed)) {
         LOG.trace("Block full, completing operation");
         return TransactionSelectionResult.BLOCK_FULL;
       } else {
         return TransactionSelectionResult.TX_TOO_LARGE_FOR_REMAINING_GAS;
       }
     }
+    setWorkingState(cumulativeGasUsed + evaluationContext.getTransaction().getGasLimit());
     return TransactionSelectionResult.SELECTED;
   }
 
   @Override
   public TransactionSelectionResult evaluateTransactionPostProcessing(
       final TransactionEvaluationContext evaluationContext,
-      final TransactionSelectionResults blockTransactionResults,
       final TransactionProcessingResult processingResult) {
     // All necessary checks were done in the pre-processing method, so nothing to do here.
     return TransactionSelectionResult.SELECTED;
@@ -81,40 +87,31 @@ public class BlockSizeTransactionSelector extends AbstractTransactionSelector {
   /**
    * Checks if the transaction is too large for the block.
    *
-   * @param transaction The transaction to be checked.
-   * @param transactionSelectionResults The results of other transaction evaluations in the same
-   *     block.
+   * @param transaction The transaction to be checked. block.
+   * @param cumulativeGasUsed The cumulative gas used by previous txs.
    * @return True if the transaction is too large for the block, false otherwise.
    */
   private boolean transactionTooLargeForBlock(
-      final Transaction transaction,
-      final TransactionSelectionResults transactionSelectionResults) {
+      final Transaction transaction, final long cumulativeGasUsed) {
 
-    return transaction.getGasLimit()
-        > context.pendingBlockHeader().getGasLimit()
-            - transactionSelectionResults.getCumulativeGasUsed();
+    return transaction.getGasLimit() > blockGasLimit - cumulativeGasUsed;
   }
 
   /**
    * Checks if the block occupancy is above the threshold.
    *
-   * @param transactionSelectionResults The results of other transaction evaluations in the same
-   *     block.
+   * @param cumulativeGasUsed The cumulative gas used by previous txs.
    * @return True if the block occupancy is above the threshold, false otherwise.
    */
-  private boolean blockOccupancyAboveThreshold(
-      final TransactionSelectionResults transactionSelectionResults) {
-    final long gasAvailable = context.pendingBlockHeader().getGasLimit();
-
-    final long gasUsed = transactionSelectionResults.getCumulativeGasUsed();
-    final long gasRemaining = gasAvailable - gasUsed;
-    final double occupancyRatio = (double) gasUsed / (double) gasAvailable;
+  private boolean blockOccupancyAboveThreshold(final long cumulativeGasUsed) {
+    final long gasRemaining = blockGasLimit - cumulativeGasUsed;
+    final double occupancyRatio = (double) cumulativeGasUsed / (double) blockGasLimit;
 
     LOG.trace(
         "Min block occupancy ratio {}, gas used {}, available {}, remaining {}, used/available {}",
         context.miningConfiguration().getMinBlockOccupancyRatio(),
-        gasUsed,
-        gasAvailable,
+        cumulativeGasUsed,
+        blockGasLimit,
         gasRemaining,
         occupancyRatio);
 
@@ -124,15 +121,11 @@ public class BlockSizeTransactionSelector extends AbstractTransactionSelector {
   /**
    * Checks if the block is full.
    *
-   * @param transactionSelectionResults The results of other transaction evaluations in the same
-   *     block.
+   * @param cumulativeGasUsed The cumulative gas used by previous txs.
    * @return True if the block is full, false otherwise.
    */
-  private boolean blockFull(final TransactionSelectionResults transactionSelectionResults) {
-    final long gasAvailable = context.pendingBlockHeader().getGasLimit();
-    final long gasUsed = transactionSelectionResults.getCumulativeGasUsed();
-
-    final long gasRemaining = gasAvailable - gasUsed;
+  private boolean blockFull(final long cumulativeGasUsed) {
+    final long gasRemaining = blockGasLimit - cumulativeGasUsed;
 
     if (gasRemaining < context.gasCalculator().getMinimumTransactionCost()) {
       LOG.trace(
