@@ -16,7 +16,6 @@ package org.hyperledger.besu.ethereum.blockcreation.txselection.selectors;
 
 import org.hyperledger.besu.ethereum.blockcreation.txselection.BlockSelectionContext;
 import org.hyperledger.besu.ethereum.blockcreation.txselection.TransactionEvaluationContext;
-import org.hyperledger.besu.ethereum.blockcreation.txselection.TransactionSelectionResults;
 import org.hyperledger.besu.ethereum.core.Transaction;
 import org.hyperledger.besu.ethereum.processing.TransactionProcessingResult;
 import org.hyperledger.besu.plugin.data.TransactionSelectionResult;
@@ -46,14 +45,11 @@ public class BlockSizeTransactionSelector extends AbstractStatefulTransactionSel
    * too large for the block returns a selection result based on block occupancy.
    *
    * @param evaluationContext The current selection session data.
-   * @param transactionSelectionResults The results of other transaction evaluations in the same
-   *     block.
    * @return The result of the transaction selection.
    */
   @Override
   public TransactionSelectionResult evaluateTransactionPreProcessing(
-      final TransactionEvaluationContext evaluationContext,
-      final TransactionSelectionResults transactionSelectionResults) {
+      final TransactionEvaluationContext evaluationContext) {
 
     final long cumulativeGasUsed = getWorkingState();
 
@@ -72,7 +68,6 @@ public class BlockSizeTransactionSelector extends AbstractStatefulTransactionSel
         return TransactionSelectionResult.TX_TOO_LARGE_FOR_REMAINING_GAS;
       }
     }
-    setWorkingState(cumulativeGasUsed + evaluationContext.getTransaction().getGasLimit());
     return TransactionSelectionResult.SELECTED;
   }
 
@@ -80,7 +75,10 @@ public class BlockSizeTransactionSelector extends AbstractStatefulTransactionSel
   public TransactionSelectionResult evaluateTransactionPostProcessing(
       final TransactionEvaluationContext evaluationContext,
       final TransactionProcessingResult processingResult) {
-    // All necessary checks were done in the pre-processing method, so nothing to do here.
+    final long gasUsedByTransaction =
+        evaluationContext.getTransaction().getGasLimit() - processingResult.getGasRemaining();
+    setWorkingState(getWorkingState() + gasUsedByTransaction);
+
     return TransactionSelectionResult.SELECTED;
   }
 

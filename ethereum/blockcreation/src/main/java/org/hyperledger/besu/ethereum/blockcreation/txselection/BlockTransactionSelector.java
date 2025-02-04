@@ -404,7 +404,7 @@ public class BlockTransactionSelector implements BlockTransactionSelectionServic
 
     for (var selector : transactionSelectors) {
       TransactionSelectionResult result =
-          selector.evaluateTransactionPreProcessing(evaluationContext, transactionSelectionResults);
+          selector.evaluateTransactionPreProcessing(evaluationContext);
       if (!result.equals(SELECTED)) {
         return result;
       }

@@ -16,7 +16,6 @@ package org.hyperledger.besu.ethereum.blockcreation.txselection.selectors;
 
 import org.hyperledger.besu.ethereum.blockcreation.txselection.BlockSelectionContext;
 import org.hyperledger.besu.ethereum.blockcreation.txselection.TransactionEvaluationContext;
-import org.hyperledger.besu.ethereum.blockcreation.txselection.TransactionSelectionResults;
 import org.hyperledger.besu.ethereum.processing.TransactionProcessingResult;
 import org.hyperledger.besu.plugin.data.TransactionSelectionResult;
 import org.hyperledger.besu.plugin.services.txselection.TransactionSelector;
@@ -36,12 +35,10 @@ public abstract class AbstractTransactionSelector implements TransactionSelector
    * Evaluates a transaction in the context of other transactions in the same block.
    *
    * @param evaluationContext The current selection session data.
-   * @param blockTransactionResults The results of other transaction evaluations in the same block.
    * @return The result of the transaction evaluation
    */
   public abstract TransactionSelectionResult evaluateTransactionPreProcessing(
-      final TransactionEvaluationContext evaluationContext,
-      final TransactionSelectionResults blockTransactionResults);
+      final TransactionEvaluationContext evaluationContext);
 
   /**
    * Evaluates a transaction considering other transactions in the same block and a transaction

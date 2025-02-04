@@ -16,6 +16,9 @@ package org.hyperledger.besu.ethereum.blockcreation.txselection.selectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
+import static org.hyperledger.besu.plugin.data.TransactionSelectionResult.BLOBS_FULL;
+import static org.hyperledger.besu.plugin.data.TransactionSelectionResult.SELECTED;
+import static org.hyperledger.besu.plugin.data.TransactionSelectionResult.TX_TOO_LARGE_FOR_REMAINING_BLOB_GAS;
 import static org.mockito.Answers.RETURNS_DEEP_STUBS;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
@@ -34,10 +37,10 @@ import org.hyperledger.besu.datatypes.VersionedHash;
 import org.hyperledger.besu.datatypes.Wei;
 import org.hyperledger.besu.ethereum.blockcreation.txselection.BlockSelectionContext;
 import org.hyperledger.besu.ethereum.blockcreation.txselection.TransactionEvaluationContext;
-import org.hyperledger.besu.ethereum.blockcreation.txselection.TransactionSelectionResults;
 import org.hyperledger.besu.ethereum.core.Transaction;
 import org.hyperledger.besu.ethereum.core.TransactionTestFixture;
 import org.hyperledger.besu.ethereum.eth.transactions.PendingTransaction;
+import org.hyperledger.besu.ethereum.processing.TransactionProcessingResult;
 import org.hyperledger.besu.evm.gascalculator.CancunGasCalculator;
 import org.hyperledger.besu.plugin.data.TransactionSelectionResult;
 import org.hyperledger.besu.plugin.services.txselection.SelectorsStateManager;
@@ -68,7 +71,7 @@ class BlobSizeTransactionSelectorTest {
   @Mock(answer = RETURNS_DEEP_STUBS)
   BlockSelectionContext blockSelectionContext;
 
-  @Mock TransactionSelectionResults selectionResults;
+  @Mock TransactionProcessingResult transactionProcessingResult;
 
   SelectorsStateManager selectorsStateManager;
   BlobSizeTransactionSelector selector;
@@ -92,9 +95,7 @@ class BlobSizeTransactionSelectorTest {
         new TransactionEvaluationContext(
             blockSelectionContext.pendingBlockHeader(), firstBlobTx, null, null, null);
     selectorsStateManager.blockSelectionStarted();
-    final var result =
-        selector.evaluateTransactionPreProcessing(txEvaluationContext, selectionResults);
-    assertThat(result).isEqualTo(TransactionSelectionResult.SELECTED);
+    evaluateAndAssertSelected(txEvaluationContext);
 
     // this non blob tx is selected regardless the blob space is already filled
     final var nonBlobTx = createEIP1559PendingTransaction();
@@ -103,9 +104,7 @@ class BlobSizeTransactionSelectorTest {
         new TransactionEvaluationContext(
             blockSelectionContext.pendingBlockHeader(), nonBlobTx, null, null, null);
     selectorsStateManager.blockSelectionStarted();
-    assertThat(
-            selector.evaluateTransactionPreProcessing(nonBlobTxEvaluationContext, selectionResults))
-        .isEqualTo(TransactionSelectionResult.SELECTED);
+    evaluateAndAssertSelected(nonBlobTxEvaluationContext);
   }
 
   @Test
@@ -116,9 +115,7 @@ class BlobSizeTransactionSelectorTest {
         new TransactionEvaluationContext(
             blockSelectionContext.pendingBlockHeader(), firstBlobTx, null, null, null);
     selectorsStateManager.blockSelectionStarted();
-    final var result =
-        selector.evaluateTransactionPreProcessing(txEvaluationContext, selectionResults);
-    assertThat(result).isEqualTo(TransactionSelectionResult.SELECTED);
+    evaluateAndAssertSelected(txEvaluationContext);
   }
 
   @Test
@@ -129,16 +126,14 @@ class BlobSizeTransactionSelectorTest {
             blockSelectionContext.pendingBlockHeader(), blobTx1, null, null, null);
 
     selectorsStateManager.blockSelectionStarted();
-    selector.evaluateTransactionPreProcessing(txEvaluationContext1, selectionResults);
+    evaluateAndAssertSelected(txEvaluationContext1);
 
     final var blobTx2 = createBlobPendingTransaction(1);
     final var txEvaluationContext2 =
         new TransactionEvaluationContext(
             blockSelectionContext.pendingBlockHeader(), blobTx2, null, null, null);
     selectorsStateManager.blockSelectionStarted();
-    final var result =
-        selector.evaluateTransactionPreProcessing(txEvaluationContext2, selectionResults);
-    assertThat(result).isEqualTo(TransactionSelectionResult.BLOBS_FULL);
+    evaluateAndAssertNotSelected(txEvaluationContext2, BLOBS_FULL);
   }
 
   @Test
@@ -150,16 +145,29 @@ class BlobSizeTransactionSelectorTest {
         new TransactionEvaluationContext(
             blockSelectionContext.pendingBlockHeader(), blobTx1, null, null, null);
     selectorsStateManager.blockSelectionStarted();
-    selector.evaluateTransactionPreProcessing(txEvaluationContext1, selectionResults);
+    evaluateAndAssertSelected(txEvaluationContext1);
 
     final var blobTx2 = createBlobPendingTransaction(MAX_BLOBS);
     final var txEvaluationContext2 =
         new TransactionEvaluationContext(
             blockSelectionContext.pendingBlockHeader(), blobTx2, null, null, null);
     selectorsStateManager.blockSelectionStarted();
-    final var result =
-        selector.evaluateTransactionPreProcessing(txEvaluationContext2, selectionResults);
-    assertThat(result).isEqualTo(TransactionSelectionResult.TX_TOO_LARGE_FOR_REMAINING_BLOB_GAS);
+    evaluateAndAssertNotSelected(txEvaluationContext2, TX_TOO_LARGE_FOR_REMAINING_BLOB_GAS);
+  }
+
+  private void evaluateAndAssertSelected(final TransactionEvaluationContext txEvaluationContext) {
+    assertThat(selector.evaluateTransactionPreProcessing(txEvaluationContext)).isEqualTo(SELECTED);
+    assertThat(
+            selector.evaluateTransactionPostProcessing(
+                txEvaluationContext, transactionProcessingResult))
+        .isEqualTo(SELECTED);
+  }
+
+  private void evaluateAndAssertNotSelected(
+      final TransactionEvaluationContext txEvaluationContext,
+      final TransactionSelectionResult preProcessedResult) {
+    assertThat(selector.evaluateTransactionPreProcessing(txEvaluationContext))
+        .isEqualTo(preProcessedResult);
   }
 
   private PendingTransaction createEIP1559PendingTransaction() {

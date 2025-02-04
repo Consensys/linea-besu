@@ -16,7 +16,6 @@ package org.hyperledger.besu.ethereum.blockcreation.txselection.selectors;
 
 import org.hyperledger.besu.ethereum.blockcreation.txselection.BlockSelectionContext;
 import org.hyperledger.besu.ethereum.blockcreation.txselection.TransactionEvaluationContext;
-import org.hyperledger.besu.ethereum.blockcreation.txselection.TransactionSelectionResults;
 import org.hyperledger.besu.ethereum.processing.TransactionProcessingResult;
 import org.hyperledger.besu.plugin.data.TransactionSelectionResult;
 import org.hyperledger.besu.plugin.services.txselection.SelectorsStateManager;
@@ -45,14 +44,11 @@ public class BlobSizeTransactionSelector extends AbstractStatefulTransactionSele
    * number of blobs or not.
    *
    * @param evaluationContext The current selection session data.
-   * @param transactionSelectionResults The results of other transaction evaluations in the same
-   *     block.
    * @return The result of the transaction selection.
    */
   @Override
   public TransactionSelectionResult evaluateTransactionPreProcessing(
-      final TransactionEvaluationContext evaluationContext,
-      final TransactionSelectionResults transactionSelectionResults) {
+      final TransactionEvaluationContext evaluationContext) {
 
     final var tx = evaluationContext.getTransaction();
     if (tx.getType().supportsBlob()) {
@@ -84,8 +80,6 @@ public class BlobSizeTransactionSelector extends AbstractStatefulTransactionSele
             .log();
         return TransactionSelectionResult.TX_TOO_LARGE_FOR_REMAINING_BLOB_GAS;
       }
-
-      setWorkingState(cumulativeBlobGasUsed + requestedBlobGas);
     }
     return TransactionSelectionResult.SELECTED;
   }
@@ -94,7 +88,10 @@ public class BlobSizeTransactionSelector extends AbstractStatefulTransactionSele
   public TransactionSelectionResult evaluateTransactionPostProcessing(
       final TransactionEvaluationContext evaluationContext,
       final TransactionProcessingResult processingResult) {
-    // All necessary checks were done in the pre-processing method, so nothing to do here.
+    final var tx = evaluationContext.getTransaction();
+    if (tx.getType().supportsBlob()) {
+      setWorkingState(getWorkingState() + context.gasCalculator().blobGasCost(tx.getBlobCount()));
+    }
     return TransactionSelectionResult.SELECTED;
   }
 }
