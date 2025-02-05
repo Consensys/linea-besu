@@ -476,13 +476,14 @@ public class BlockTransactionSelector implements BlockTransactionSelectionServic
 
     final long gasUsedByTransaction =
         transaction.getGasLimit() - processingResult.getGasRemaining();
-    final long cumulativeGasUsed =
-        transactionSelectionResults.getCumulativeGasUsed() + gasUsedByTransaction;
 
     // queue the creation of the receipt and the update of the final results
     // there actions will be performed on commit if the pending tx is definitely selected
     selectedTxPendingActions.add(
         () -> {
+          final long cumulativeGasUsed =
+              transactionSelectionResults.getCumulativeGasUsed() + gasUsedByTransaction;
+
           final TransactionReceipt receipt =
               transactionReceiptFactory.create(
                   transaction.getType(), processingResult, null, cumulativeGasUsed);
