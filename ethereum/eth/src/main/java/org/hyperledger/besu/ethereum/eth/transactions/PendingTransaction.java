@@ -121,6 +121,7 @@ public abstract class PendingTransaction
     return addedAt;
   }
 
+  @Override
   public int memorySize() {
     if (memorySize == NOT_INITIALIZED) {
       memorySize = computeMemorySize();

@@ -45,6 +45,13 @@ public interface PendingTransaction {
   long getAddedAt();
 
   /**
+   * Return the estimated amount memory that this pending transaction occupies
+   *
+   * @return the estimated memory size
+   */
+  int memorySize();
+
+  /**
    * Formats a string with detailed information about the pending transaction for debug purposes
    *
    * @return a string
