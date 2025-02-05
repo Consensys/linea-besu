@@ -43,6 +43,8 @@ public class TransactionEvaluationContext
   }
 
   public Transaction getTransaction() {
+    // ToDo: can we avoid this cast? either by always using the interface
+    //  or moving our Transaction implementation in the datatypes package
     return (Transaction) pendingTransaction.getTransaction();
   }
 

@@ -48,8 +48,9 @@ import org.hyperledger.besu.ethereum.mainnet.ProtocolSpec;
 import org.hyperledger.besu.ethereum.mainnet.ScheduleBasedBlockHeaderFunctions;
 import org.hyperledger.besu.ethereum.mainnet.WithdrawalsProcessor;
 import org.hyperledger.besu.ethereum.mainnet.feemarket.ExcessBlobGasCalculator;
-import org.hyperledger.besu.ethereum.mainnet.requests.ProcessRequestContext;
+import org.hyperledger.besu.ethereum.mainnet.requests.RequestProcessingContext;
 import org.hyperledger.besu.ethereum.mainnet.requests.RequestProcessorCoordinator;
+import org.hyperledger.besu.ethereum.mainnet.systemcall.BlockProcessingContext;
 import org.hyperledger.besu.evm.account.MutableAccount;
 import org.hyperledger.besu.evm.worldstate.WorldUpdater;
 import org.hyperledger.besu.plugin.services.exception.StorageException;
@@ -210,10 +211,6 @@ public abstract class AbstractBlockCreator implements AsyncBlockCreator {
 
       final List<BlockHeader> ommers = maybeOmmers.orElse(selectOmmers());
 
-      newProtocolSpec
-          .getBlockHashProcessor()
-          .processBlockHashes(disposableWorldState, processableBlockHeader);
-
       throwIfStopped();
 
       final var selectorsStateManager = new SelectorsStateManager();
@@ -225,6 +222,18 @@ public abstract class AbstractBlockCreator implements AsyncBlockCreator {
       pluginTransactionSelector
           .getOperationTracer()
           .traceStartBlock(processableBlockHeader, miningBeneficiary);
+
+      operationTracer.traceStartBlock(processableBlockHeader, miningBeneficiary);
+      BlockProcessingContext blockProcessingContext =
+          new BlockProcessingContext(
+              processableBlockHeader,
+              disposableWorldState,
+              newProtocolSpec,
+              newProtocolSpec
+                  .getBlockHashProcessor()
+                  .createBlockHashLookup(protocolContext.getBlockchain(), processableBlockHeader),
+              operationTracer);
+      newProtocolSpec.getBlockHashProcessor().process(blockProcessingContext);
 
       timings.register("preTxsSelection");
       final TransactionSelectionResults transactionResults =
@@ -256,20 +265,11 @@ public abstract class AbstractBlockCreator implements AsyncBlockCreator {
       // EIP-7685: process EL requests
       final Optional<RequestProcessorCoordinator> requestProcessor =
           newProtocolSpec.getRequestProcessorCoordinator();
-
-      ProcessRequestContext context =
-          new ProcessRequestContext(
-              processableBlockHeader,
-              disposableWorldState,
-              newProtocolSpec,
-              transactionResults.getReceipts(),
-              newProtocolSpec
-                  .getBlockHashProcessor()
-                  .createBlockHashLookup(protocolContext.getBlockchain(), processableBlockHeader),
-              operationTracer);
+      RequestProcessingContext requestProcessingContext =
+          new RequestProcessingContext(blockProcessingContext, transactionResults.getReceipts());
 
       Optional<List<Request>> maybeRequests =
-          requestProcessor.map(processor -> processor.process(context));
+          requestProcessor.map(processor -> processor.process(requestProcessingContext));
 
       throwIfStopped();
 
