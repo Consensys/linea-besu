@@ -43,4 +43,11 @@ public interface PendingTransaction {
    * @return timestamp
    */
   long getAddedAt();
+
+  /**
+   * Formats a string with detailed information about the pending transaction for debug purposes
+   *
+   * @return a string
+   */
+  String toTraceLog();
 }

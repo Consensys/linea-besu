@@ -332,7 +332,7 @@ public class BlockTransactionSelector implements BlockTransactionSelectionServic
     }
 
     final TransactionProcessingResult processingResult =
-        processTransaction(evaluationContext.getPendingTransaction());
+        processTransaction(evaluationContext.getTransaction());
 
     var postProcessingSelectionResult = evaluatePostProcessing(evaluationContext, processingResult);
 
@@ -440,11 +440,10 @@ public class BlockTransactionSelector implements BlockTransactionSelectionServic
   /**
    * Processes a transaction
    *
-   * @param pendingTransaction The transaction to be processed.
+   * @param transaction The transaction to be processed.
    * @return The result of the transaction processing.
    */
-  private TransactionProcessingResult processTransaction(
-      final PendingTransaction pendingTransaction) {
+  private TransactionProcessingResult processTransaction(final Transaction transaction) {
     final BlockHashLookup blockHashLookup =
         blockSelectionContext
             .blockHashProcessor()
@@ -452,7 +451,7 @@ public class BlockTransactionSelector implements BlockTransactionSelectionServic
     return transactionProcessor.processTransaction(
         txWorldStateUpdater,
         blockSelectionContext.pendingBlockHeader(),
-        pendingTransaction.getTransaction(),
+        transaction,
         blockSelectionContext.miningBeneficiary(),
         operationTracer,
         blockHashLookup,
@@ -592,7 +591,7 @@ public class BlockTransactionSelector implements BlockTransactionSelectionServic
           .setMessage(
               "Transaction {} is too late for inclusion, with result {}, evaluated in {} that is over the max limit of {}ms"
                   + ", {}")
-          .addArgument(evaluationContext.getPendingTransaction()::getHash)
+          .addArgument(evaluationContext.getTransaction()::getHash)
           .addArgument(selectionResult)
           .addArgument(evaluationTimer)
           .addArgument(blockTxsSelectionMaxTime)

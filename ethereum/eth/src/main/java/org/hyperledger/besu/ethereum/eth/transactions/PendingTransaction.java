@@ -291,6 +291,7 @@ public abstract class PendingTransaction
         + '}';
   }
 
+  @Override
   public String toTraceLog() {
     return "{sequence: "
         + sequence
