@@ -334,12 +334,13 @@ public class BlockTransactionSelector implements BlockTransactionSelectionServic
     final TransactionProcessingResult processingResult =
         processTransaction(evaluationContext.getTransaction());
 
+    txWorldStateUpdater.markTransactionBoundary();
+
     var postProcessingSelectionResult = evaluatePostProcessing(evaluationContext, processingResult);
 
-    if (postProcessingSelectionResult.selected()) {
-      return handleTransactionSelected(evaluationContext, processingResult);
-    }
-    return handleTransactionNotSelected(evaluationContext, postProcessingSelectionResult);
+    return postProcessingSelectionResult.selected()
+        ? handleTransactionSelected(evaluationContext, processingResult)
+        : handleTransactionNotSelected(evaluationContext, postProcessingSelectionResult);
   }
 
   @Override
