@@ -20,34 +20,48 @@ import org.hyperledger.besu.ethereum.blockcreation.txselection.TransactionEvalua
 import org.hyperledger.besu.ethereum.processing.TransactionProcessingResult;
 import org.hyperledger.besu.plugin.data.TransactionSelectionResult;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SkipSenderTransactionSelector extends AbstractTransactionSelector {
   private static final Logger LOG = LoggerFactory.getLogger(SkipSenderTransactionSelector.class);
-  private final Set<Address> skippedSenders = new HashSet<>();
+  private final Map<Address, Long> skippedSenderNonceMap = new HashMap<>();
 
   public SkipSenderTransactionSelector(final BlockSelectionContext context) {
     super(context);
   }
 
+  /**
+   * Check if this pending tx belongs to a sender with a previous pending tx not selected, in which
+   * case we can safely skip the evaluation due to the nonce gap
+   *
+   * @param evaluationContext The current selection session data.
+   * @return SENDER_WITH_PREVIOUS_TX_NOT_SELECTED if there is a nonce gas for this sender
+   */
   @Override
   public TransactionSelectionResult evaluateTransactionPreProcessing(
       final TransactionEvaluationContext evaluationContext) {
     final var sender = evaluationContext.getTransaction().getSender();
-    if (skippedSenders.contains(sender)) {
+    final var skippedNonce = skippedSenderNonceMap.get(sender);
+    if (nonceGap(evaluationContext, skippedNonce)) {
       LOG.atTrace()
-          .setMessage("Not selecting tx {} since its sender {} is in the skip list")
+          .setMessage("Not selecting tx {} since its sender {} is in the skip list with nonce {}")
           .addArgument(() -> evaluationContext.getPendingTransaction().toTraceLog())
           .addArgument(sender)
+          .addArgument(skippedNonce)
           .log();
 
       return TransactionSelectionResult.SENDER_WITH_PREVIOUS_TX_NOT_SELECTED;
     }
     return TransactionSelectionResult.SELECTED;
+  }
+
+  private static boolean nonceGap(
+      final TransactionEvaluationContext evaluationContext, final Long skippedNonce) {
+    return skippedNonce != null && evaluationContext.getTransaction().getNonce() > skippedNonce;
   }
 
   @Override
@@ -63,7 +77,7 @@ public class SkipSenderTransactionSelector extends AbstractTransactionSelector {
    * same sender, since it will never be selected due to the nonce gap, so we add the sender to the
    * skip list.
    *
-   * @param evaluationContext The current selection context
+   * @param evaluationContext The current evaluation context
    * @param transactionSelectionResult The transaction selection result
    */
   @Override
@@ -71,7 +85,27 @@ public class SkipSenderTransactionSelector extends AbstractTransactionSelector {
       final TransactionEvaluationContext evaluationContext,
       final TransactionSelectionResult transactionSelectionResult) {
     final var sender = evaluationContext.getTransaction().getSender();
-    skippedSenders.add(sender);
-    LOG.trace("Sender {} added to the skip list", sender);
+    final var nonce = evaluationContext.getTransaction().getNonce();
+    skippedSenderNonceMap.put(sender, nonce);
+    LOG.trace("Sender {} added to the skip list with nonce {}", sender, nonce);
+  }
+
+  /**
+   * When a transaction is selected we can remove it from the list. This could happen when the same
+   * pending tx is present both in the internal pool and the plugin pool, and for example it is not
+   * selected by the plugin but could be later selected from the internal pool.
+   *
+   * @param evaluationContext The current evaluation context
+   * @param processingResult The transaction processing result
+   */
+  @Override
+  public void onTransactionSelected(
+      final TransactionEvaluationContext evaluationContext,
+      final TransactionProcessingResult processingResult) {
+    final var sender = evaluationContext.getTransaction().getSender();
+    final var skippedNonce = skippedSenderNonceMap.remove(sender);
+    if (skippedNonce != null) {
+      LOG.trace("Sender {} removed from the skip list, skipped nonce was {}", sender, skippedNonce);
+    }
   }
 }
