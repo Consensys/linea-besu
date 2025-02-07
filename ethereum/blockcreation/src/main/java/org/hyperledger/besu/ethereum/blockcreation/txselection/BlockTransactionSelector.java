@@ -184,10 +184,6 @@ public class BlockTransactionSelector implements BlockTransactionSelectionServic
    *     evaluation.
    */
   public TransactionSelectionResults buildTransactionListForBlock() {
-    LOG.atDebug()
-        .setMessage("Transaction pool stats {}")
-        .addArgument(blockSelectionContext.transactionPool()::logStats)
-        .log();
     timeLimitedSelection();
     LOG.atTrace()
         .setMessage("Transaction selection result {}")
@@ -202,9 +198,14 @@ public class BlockTransactionSelector implements BlockTransactionSelectionServic
             () -> {
               selectorsStateManager.blockSelectionStarted();
 
+              LOG.debug("Starting plugin transaction selection");
               transactionSelectionService.selectPendingTransactions(
                   this, blockSelectionContext.pendingBlockHeader());
 
+              LOG.atDebug()
+                  .setMessage("Starting internal pool transaction selection, stats {}")
+                  .addArgument(blockSelectionContext.transactionPool()::logStats)
+                  .log();
               blockSelectionContext.transactionPool().selectTransactions(this::evaluateTransaction);
             },
             null);
@@ -487,7 +488,7 @@ public class BlockTransactionSelector implements BlockTransactionSelectionServic
 
           final TransactionReceipt receipt =
               transactionReceiptFactory.create(
-                  transaction.getType(), processingResult, null, cumulativeGasUsed);
+                  transaction.getType(), processingResult, worldState, cumulativeGasUsed);
 
           transactionSelectionResults.updateSelected(transaction, receipt, gasUsedByTransaction);
 
