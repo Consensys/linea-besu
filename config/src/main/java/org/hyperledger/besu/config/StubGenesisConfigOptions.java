@@ -120,6 +120,11 @@ public class StubGenesisConfigOptions implements GenesisConfigOptions, Cloneable
   }
 
   @Override
+  public IbftLegacyConfigOptions getIbftLegacyConfigOptions() {
+    return IbftLegacyConfigOptions.DEFAULT;
+  }
+
+  @Override
   public boolean isIbft2() {
     return false;
   }
@@ -431,6 +436,9 @@ public class StubGenesisConfigOptions implements GenesisConfigOptions, Cloneable
     }
     if (isEthHash()) {
       builder.put("ethash", getEthashConfigOptions().asMap());
+    }
+    if (isIbftLegacy()) {
+      builder.put("ibft", getIbftLegacyConfigOptions().asMap());
     }
     if (isIbft2()) {
       builder.put("ibft2", getBftConfigOptions().asMap());

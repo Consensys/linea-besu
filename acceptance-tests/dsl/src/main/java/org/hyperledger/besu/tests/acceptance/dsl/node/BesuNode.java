@@ -30,6 +30,7 @@ import org.hyperledger.besu.ethereum.api.jsonrpc.websocket.WebSocketConfiguratio
 import org.hyperledger.besu.ethereum.core.MiningConfiguration;
 import org.hyperledger.besu.ethereum.core.PrivacyParameters;
 import org.hyperledger.besu.ethereum.core.Util;
+import org.hyperledger.besu.ethereum.eth.sync.SynchronizerConfiguration;
 import org.hyperledger.besu.ethereum.eth.transactions.TransactionPoolConfiguration;
 import org.hyperledger.besu.ethereum.p2p.config.NetworkingConfiguration;
 import org.hyperledger.besu.ethereum.permissioning.PermissioningConfiguration;
@@ -134,6 +135,7 @@ public class BesuNode implements NodeConfiguration, RunnableNode, AutoCloseable 
   private Optional<Integer> exitCode = Optional.empty();
   private final boolean isStrictTxReplayProtectionEnabled;
   private final Map<String, String> environment;
+  private SynchronizerConfiguration synchronizerConfiguration;
   private final Optional<KeyValueStorageFactory> storageFactory;
 
   public BesuNode(
@@ -234,6 +236,7 @@ public class BesuNode implements NodeConfiguration, RunnableNode, AutoCloseable 
     this.isDnsEnabled = isDnsEnabled;
     privacyParameters.ifPresent(this::setPrivacyParameters);
     this.environment = environment;
+    this.synchronizerConfiguration = SynchronizerConfiguration.builder().build(); // Default config
     LOG.info("Created BesuNode {}", this);
   }
 
@@ -790,6 +793,20 @@ public class BesuNode implements NodeConfiguration, RunnableNode, AutoCloseable 
       nodeRequests.shutdown();
       nodeRequests = null;
     }
+    deleteRuntimeFiles();
+  }
+
+  private void deleteRuntimeFiles() {
+    try {
+      Files.deleteIfExists(homeDirectory.resolve("besu.networks"));
+    } catch (IOException e) {
+      LOG.error("Failed to clean up besu.networks file in {}", homeDirectory, e);
+    }
+    try {
+      Files.deleteIfExists(homeDirectory.resolve("besu.ports"));
+    } catch (IOException e) {
+      LOG.error("Failed to clean up besu.ports file in {}", homeDirectory, e);
+    }
   }
 
   @Override
@@ -839,6 +856,15 @@ public class BesuNode implements NodeConfiguration, RunnableNode, AutoCloseable 
 
   public ApiConfiguration getApiConfiguration() {
     return apiConfiguration;
+  }
+
+  public SynchronizerConfiguration getSynchronizerConfiguration() {
+    return synchronizerConfiguration;
+  }
+
+  public BesuNode setSynchronizerConfiguration(final SynchronizerConfiguration config) {
+    this.synchronizerConfiguration = config;
+    return this;
   }
 
   public Optional<KeyValueStorageFactory> getStorageFactory() {
