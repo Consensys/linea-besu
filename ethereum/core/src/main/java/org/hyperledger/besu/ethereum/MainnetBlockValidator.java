@@ -28,7 +28,7 @@ import org.hyperledger.besu.ethereum.mainnet.BlockProcessor;
 import org.hyperledger.besu.ethereum.mainnet.BodyValidationMode;
 import org.hyperledger.besu.ethereum.mainnet.HeaderValidationMode;
 import org.hyperledger.besu.ethereum.trie.MerkleTrieException;
-import org.hyperledger.besu.ethereum.trie.diffbased.common.provider.WorldStateQueryParams;
+import org.hyperledger.besu.ethereum.trie.pathbased.common.provider.WorldStateQueryParams;
 import org.hyperledger.besu.plugin.services.exception.StorageException;
 
 import java.util.ArrayList;
@@ -248,7 +248,7 @@ public class MainnetBlockValidator implements BlockValidator {
   protected BlockProcessingResult processBlock(
       final ProtocolContext context, final MutableWorldState worldState, final Block block) {
 
-    return blockProcessor.processBlock(context.getBlockchain(), worldState, block);
+    return blockProcessor.processBlock(context, context.getBlockchain(), worldState, block);
   }
 
   @Override

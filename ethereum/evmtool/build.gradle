@@ -69,7 +69,9 @@ dependencies {
   nativeImageClasspath 'org.slf4j:slf4j-nop'
 }
 
-mainClassName = 'org.hyperledger.besu.evmtool.EvmTool'
+application {
+  mainClass = 'org.hyperledger.besu.evmtool.EvmTool'
+}
 
 
 // no evmtool docker image needed on this fork

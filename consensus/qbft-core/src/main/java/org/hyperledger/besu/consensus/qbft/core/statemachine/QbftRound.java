@@ -16,7 +16,6 @@ package org.hyperledger.besu.consensus.qbft.core.statemachine;
 
 import static java.util.Collections.emptyList;
 
-import org.hyperledger.besu.consensus.common.bft.BftExtraData;
 import org.hyperledger.besu.consensus.common.bft.BftExtraDataCodec;
 import org.hyperledger.besu.consensus.common.bft.ConsensusRoundIdentifier;
 import org.hyperledger.besu.consensus.common.bft.RoundTimer;
@@ -30,13 +29,10 @@ import org.hyperledger.besu.consensus.qbft.core.payload.PreparePayload;
 import org.hyperledger.besu.consensus.qbft.core.payload.RoundChangePayload;
 import org.hyperledger.besu.consensus.qbft.core.types.QbftBlock;
 import org.hyperledger.besu.consensus.qbft.core.types.QbftBlockCreator;
-import org.hyperledger.besu.consensus.qbft.core.types.QbftBlockHashing;
 import org.hyperledger.besu.consensus.qbft.core.types.QbftBlockHeader;
 import org.hyperledger.besu.consensus.qbft.core.types.QbftBlockImporter;
 import org.hyperledger.besu.consensus.qbft.core.types.QbftBlockInterface;
 import org.hyperledger.besu.consensus.qbft.core.types.QbftContext;
-import org.hyperledger.besu.consensus.qbft.core.types.QbftExtraDataProvider;
-import org.hyperledger.besu.consensus.qbft.core.types.QbftHashMode;
 import org.hyperledger.besu.consensus.qbft.core.types.QbftMinedBlockObserver;
 import org.hyperledger.besu.consensus.qbft.core.types.QbftProtocolSchedule;
 import org.hyperledger.besu.crypto.SECPSignature;
@@ -78,10 +74,6 @@ public class QbftRound {
   /** The Bft extra data codec. */
   protected final BftExtraDataCodec bftExtraDataCodec;
 
-  /** The Bft extra data provider */
-  protected final QbftExtraDataProvider qbftExtraDataProvider;
-
-  private final QbftBlockHashing blockHashing;
   private final QbftBlockHeader parentHeader;
 
   /**
@@ -97,8 +89,6 @@ public class QbftRound {
    * @param transmitter the transmitter
    * @param roundTimer the round timer
    * @param bftExtraDataCodec the bft extra data codec
-   * @param qbftExtraDataProvider the qbft extra data provider
-   * @param blockHashing the block hashing
    * @param parentHeader the parent header
    */
   public QbftRound(
@@ -112,8 +102,6 @@ public class QbftRound {
       final QbftMessageTransmitter transmitter,
       final RoundTimer roundTimer,
       final BftExtraDataCodec bftExtraDataCodec,
-      final QbftExtraDataProvider qbftExtraDataProvider,
-      final QbftBlockHashing blockHashing,
       final QbftBlockHeader parentHeader) {
     this.roundState = roundState;
     this.blockCreator = blockCreator;
@@ -124,8 +112,6 @@ public class QbftRound {
     this.messageFactory = messageFactory;
     this.transmitter = transmitter;
     this.bftExtraDataCodec = bftExtraDataCodec;
-    this.qbftExtraDataProvider = qbftExtraDataProvider;
-    this.blockHashing = blockHashing;
     this.parentHeader = parentHeader;
     roundTimer.startTimer(getRoundIdentifier());
   }
@@ -173,9 +159,7 @@ public class QbftRound {
           protocolContext.getConsensusContext(QbftContext.class).blockInterface();
       blockToPublish =
           bftBlockInterface.replaceRoundInBlock(
-              preparedBlock,
-              roundState.getRoundIdentifier().getRoundNumber(),
-              QbftHashMode.COMMITTED_SEAL);
+              preparedBlock, roundState.getRoundIdentifier().getRoundNumber());
     }
 
     LOG.debug(" proposal - new/prepared block hash : {}", blockToPublish.getHash());
@@ -359,13 +343,11 @@ public class QbftRound {
 
     final QbftBlock blockToImport =
         blockCreator.createSealedBlock(
-            qbftExtraDataProvider,
             roundState.getProposedBlock().get(),
             roundState.getRoundIdentifier().getRoundNumber(),
             roundState.getCommitSeals());
 
     final long blockNumber = blockToImport.getHeader().getNumber();
-    final BftExtraData extraData = qbftExtraDataProvider.getExtraData(blockToImport.getHeader());
     if (getRoundIdentifier().getRoundNumber() > 0) {
       LOG.info(
           "Importing proposed block to chain. round={}, hash={}",
@@ -378,15 +360,13 @@ public class QbftRound {
           blockToImport.getHash());
     }
 
-    LOG.trace("Importing proposed block with extraData={}", extraData);
     final QbftBlockImporter blockImporter =
-        protocolSchedule.getByBlockHeader(blockToImport.getHeader()).getBlockImporter();
+        protocolSchedule.getBlockImporter(blockToImport.getHeader());
     final boolean result = blockImporter.importBlock(blockToImport);
     if (!result) {
       LOG.error(
-          "Failed to import proposed block to chain. block={} extraData={} blockHeader={}",
+          "Failed to import proposed block to chain. block={} blockHeader={}",
           blockNumber,
-          extraData,
           blockToImport.getHeader());
     } else {
       notifyNewBlockListeners(blockToImport);
@@ -395,18 +375,14 @@ public class QbftRound {
 
   private SECPSignature createCommitSeal(final QbftBlock block) {
     final QbftBlock commitBlock = createCommitBlock(block);
-    final QbftBlockHeader proposedHeader = commitBlock.getHeader();
-    final BftExtraData extraData = qbftExtraDataProvider.getExtraData(proposedHeader);
-    final Hash commitHash =
-        blockHashing.calculateDataHashForCommittedSeal(proposedHeader, extraData);
+    final Hash commitHash = commitBlock.getHash();
     return nodeKey.sign(commitHash);
   }
 
   private QbftBlock createCommitBlock(final QbftBlock block) {
     final QbftBlockInterface bftBlockInterface =
         protocolContext.getConsensusContext(QbftContext.class).blockInterface();
-    return bftBlockInterface.replaceRoundInBlock(
-        block, getRoundIdentifier().getRoundNumber(), QbftHashMode.COMMITTED_SEAL);
+    return bftBlockInterface.replaceRoundInBlock(block, getRoundIdentifier().getRoundNumber());
   }
 
   private void notifyNewBlockListeners(final QbftBlock block) {
